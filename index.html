@@ -709,7 +709,21 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2x5OjipwHI-9r9VCK33UzA0C2k9CGdcU",
+  authDomain: "logger-3824e.firebaseapp.com",
+  projectId: "logger-3824e",
+  storageBucket: "logger-3824e.firebasestorage.app",
+  messagingSenderId: "741686464852",
+  appId: "1:741686464852:web:47314cb0eef0632f40b8c1"
+};
+const app = initializeApp(firebaseConfig);
+const fsdb = getFirestore(app);
+
 const RAWG='3bd7e4646af94b799692b80a858ce3e8';
 const TMDB='f387c81953ce058f114109b8c1a7fee5';
 const TMDB_IMG='https://image.tmdb.org/t/p/w200';
@@ -718,13 +732,18 @@ const RATINGS=['skip','mediocre','decent','excellent','peak'];
 const RATING_LABELS={skip:'Skip',mediocre:'Mediocre',decent:'Decent',excellent:'Excellent',peak:'Peak'};
 const RATING_CLASS={skip:'r-skip',mediocre:'r-mediocre',decent:'r-decent',excellent:'r-excellent',peak:'r-peak'};
 
-// DB
-const DB_NAME='LoggerDB2',DB_VER=1,STORE='entries';
-let db=null;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE))e.target.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e.target.error)});}
-function dbGetAll(){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readonly').objectStore(STORE).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});}
-function dbPut(e){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).put(e);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)});}
-function dbDelete(id){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)});}
+// Firebase DB functions
+function openDB(){return Promise.resolve();}
+async function dbGetAll(){
+  const snap=await getDocs(collection(fsdb,'entries'));
+  return snap.docs.map(d=>d.data());
+}
+async function dbPut(e){
+  await setDoc(doc(fsdb,'entries',String(e.id)),e);
+}
+async function dbDelete(id){
+  await deleteDoc(doc(fsdb,'entries',String(id)));
+}
 
 function getWL(){return JSON.parse(localStorage.getItem('logger-wl')||'[]');}
 function saveWL(a){localStorage.setItem('logger-wl',JSON.stringify(a));}
@@ -1233,6 +1252,13 @@ async function init(){
   setStatusOpts();renderLog();
 }
 init();
+
+// Expose functions used in inline onclick handlers
+window.openEdit=openEdit;
+window.toggleFav=toggleFav;
+window.delEntry=delEntry;
+window.wlLog=wlLog;
+window.wlDel=wlDel;
 </script>
 </body>
 </html>
