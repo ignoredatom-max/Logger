@@ -1219,26 +1219,7 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
 // Boot
 async function init(){
   await openDB();DATA=await dbGetAll();
-  if(!DATA.length){
-    for(const k of['logger-backup','vault-backup']){
-      const b=localStorage.getItem(k);
-      if(b){
-        try{
-          const p=JSON.parse(b);
-          const es=p.entries||p;
-          if(Array.isArray(es)&&es.length){
-            for(const e of es)await dbPut(e);
-            DATA=await dbGetAll();
-            // Also restore watchlist if present
-            if(Array.isArray(p.watchlist)&&p.watchlist.length&&!getWL().length){
-              saveWL(p.watchlist);
-            }
-            toast('✅ Data restored!',3000);break;
-          }
-        }catch(e){}
-      }
-    }
-  }
+
 
   setStatusOpts();renderLog();
 }
