@@ -709,21 +709,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB2x5OjipwHI-9r9VCK33UzA0C2k9CGdcU",
-  authDomain: "logger-3824e.firebaseapp.com",
-  projectId: "logger-3824e",
-  storageBucket: "logger-3824e.firebasestorage.app",
-  messagingSenderId: "741686464852",
-  appId: "1:741686464852:web:47314cb0eef0632f40b8c1"
-};
-const app = initializeApp(firebaseConfig);
-const fsdb = getFirestore(app);
-
+<script>
 const RAWG='3bd7e4646af94b799692b80a858ce3e8';
 const TMDB='f387c81953ce058f114109b8c1a7fee5';
 const TMDB_IMG='https://image.tmdb.org/t/p/w200';
@@ -732,18 +718,13 @@ const RATINGS=['skip','mediocre','decent','excellent','peak'];
 const RATING_LABELS={skip:'Skip',mediocre:'Mediocre',decent:'Decent',excellent:'Excellent',peak:'Peak'};
 const RATING_CLASS={skip:'r-skip',mediocre:'r-mediocre',decent:'r-decent',excellent:'r-excellent',peak:'r-peak'};
 
-// Firebase DB functions
-function openDB(){return Promise.resolve();}
-async function dbGetAll(){
-  const snap=await getDocs(collection(fsdb,'entries'));
-  return snap.docs.map(d=>d.data());
-}
-async function dbPut(e){
-  await setDoc(doc(fsdb,'entries',String(e.id)),e);
-}
-async function dbDelete(id){
-  await deleteDoc(doc(fsdb,'entries',String(id)));
-}
+// DB
+const DB_NAME='LoggerDB2',DB_VER=1,STORE='entries';
+let db=null;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE))e.target.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e.target.error)});}
+function dbGetAll(){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readonly').objectStore(STORE).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});}
+function dbPut(e){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).put(e);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)});}
+function dbDelete(id){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)});}
 
 function getWL(){return JSON.parse(localStorage.getItem('logger-wl')||'[]');}
 function saveWL(a){localStorage.setItem('logger-wl',JSON.stringify(a));}
@@ -1219,18 +1200,39 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
 // Boot
 async function init(){
   await openDB();DATA=await dbGetAll();
-
-
+  if(!DATA.length){
+    for(const k of['logger-backup','vault-backup']){
+      const b=localStorage.getItem(k);
+      if(b){
+        try{
+          const p=JSON.parse(b);
+          const es=p.entries||p;
+          if(Array.isArray(es)&&es.length){
+            for(const e of es)await dbPut(e);
+            DATA=await dbGetAll();
+            // Also restore watchlist if present
+            if(Array.isArray(p.watchlist)&&p.watchlist.length&&!getWL().length){
+              saveWL(p.watchlist);
+            }
+            toast('✅ Data restored!',3000);break;
+          }
+        }catch(e){}
+      }
+    }
+  }
+  if(!DATA.length){
+    const seed=[
+      {id:new Date('2026-03-09T12:00:00').getTime(),type:'movie', title:'Dune: Part Two', poster:'https://image.tmdb.org/t/p/w200/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',genre:'Sci-Fi',year:'2024',status:'done',rating:'excellent',fav:false,rewatched:false,notes:'Visually stunning.'},
+      {id:new Date('2026-02-15T12:00:00').getTime(),type:'series',title:'Severance',      poster:'https://image.tmdb.org/t/p/w200/sWgBv5LPv2N160Ovv2tpnuFZvpd.jpg',genre:'Thriller',year:'2022',status:'watching',rating:'peak',fav:true,rewatched:false,notes:'Mind-bending.'},
+      {id:new Date('2026-02-08T12:00:00').getTime(),type:'movie', title:'Drive',           poster:'https://image.tmdb.org/t/p/w200/602vevIURmpzkHMvfcoPP3oUxGf.jpg',genre:'Crime',year:'2011',status:'done',rating:'peak',fav:true,rewatched:false,notes:'Ryan Gosling.'},
+      {id:new Date('2026-01-20T12:00:00').getTime(),type:'game',  title:'Elden Ring',      poster:'https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg',genre:'Action RPG',year:'2022',status:'done',rating:'peak',fav:true,rewatched:false,notes:'Masterpiece.'},
+      {id:new Date('2026-01-05T12:00:00').getTime(),type:'game',  title:'Hollow Knight',   poster:'https://media.rawg.io/media/games/4cf/4cfc6b7f1850590a4634b08bfab308ab.jpg',genre:'Metroidvania',year:'2017',status:'playing',rating:'excellent',fav:false,rewatched:false,notes:''},
+    ];
+    for(const e of seed)await dbPut(e);DATA=await dbGetAll();
+  }
   setStatusOpts();renderLog();
 }
 init();
-
-// Expose functions used in inline onclick handlers
-window.openEdit=openEdit;
-window.toggleFav=toggleFav;
-window.delEntry=delEntry;
-window.wlLog=wlLog;
-window.wlDel=wlDel;
 </script>
 </body>
 </html>
