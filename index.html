@@ -11,15 +11,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#14141a;
-  --bg2:#1e1e26;
-  --bg3:#26262f;
-  --bg4:#2e2e38;
-  --border:rgba(255,255,255,0.06);
-  --border2:rgba(255,255,255,0.1);
-  --text:#f0f0f5;
-  --text2:#9898a8;
-  --text3:#555565;
+  --bg:#1a1a1a;
+  --bg2:#242424;
+  --bg3:#2e2e2e;
+  --bg4:#383838;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --text:#f0f0f0;
+  --text2:#a0a0a0;
+  --text3:#606060;
   --green:#00c566;
   --teal:#00b4d8;
   --orange:#ff9f0a;
@@ -35,18 +35,13 @@
 html{background:var(--bg)}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
-/* ── ANIMATED BG GRADIENT ─────────────────────── */
-body::before{
-  content:'';position:fixed;inset:0;z-index:-1;
-  background:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(45,127,249,0.08) 0%,transparent 60%),
-             radial-gradient(ellipse 60% 30% at 80% 80%,rgba(0,197,102,0.05) 0%,transparent 50%);
-  pointer-events:none;
-}
+/* ── BG ───────────────────────────────────────── */
+body::before{content:none}
 
 /* ── NAV ─────────────────────────────────────── */
 .nav{
   position:fixed;bottom:0;left:0;right:0;z-index:100;
-  background:rgba(20,20,26,0.85);
+  background:rgba(26,26,26,0.88);
   border-top:1px solid var(--border2);
   display:flex;
   padding-bottom:env(safe-area-inset-bottom);
@@ -615,6 +610,14 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
       <div class="header-sub">Stuff you loved ❤️</div>
     </div>
   </div>
+  <div class="toolbar" style="padding-top:2px">
+    <div class="seg">
+      <button class="seg-btn on" data-ff="all">All</button>
+      <button class="seg-btn" data-ff="movie">🎬</button>
+      <button class="seg-btn" data-ff="series">📺</button>
+      <button class="seg-btn" data-ff="game">🎮</button>
+    </div>
+  </div>
   <div class="fav-list-inner" id="fav-list"></div>
 </div>
 
@@ -632,14 +635,26 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 <div class="sheet" id="settingsSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">Settings</div>
+  <!-- Firebase / Google account -->
+  <div class="sheet-item" id="authBtn">
+    <div class="sheet-ico" id="authIco">🔑</div>
+    <div class="sheet-info">
+      <div class="sheet-label" id="authLabel">Sign in with Google</div>
+      <div class="sheet-sub" id="authSub">Sync your data to the cloud</div>
+    </div>
+    <div class="sheet-arrow" id="authArrow">›</div>
+  </div>
   <div class="sheet-item" id="exportBtn">
     <div class="sheet-ico">⬇️</div>
-    <div class="sheet-info"><div class="sheet-label">Backup Data</div><div class="sheet-sub">Download all entries as JSON</div></div>
+    <div class="sheet-info">
+      <div class="sheet-label">Download Backup</div>
+      <div class="sheet-sub">Save all entries as a JSON file</div>
+    </div>
     <div class="sheet-arrow">›</div>
   </div>
   <div class="sheet-item" id="importBtn">
     <div class="sheet-ico">⬆️</div>
-    <div class="sheet-info"><div class="sheet-label">Restore from Backup</div><div class="sheet-sub">Merge entries from a backup file</div></div>
+    <div class="sheet-info"><div class="sheet-label">Restore from Backup</div><div class="sheet-sub">Merge entries from a JSON file</div></div>
     <div class="sheet-arrow">›</div>
   </div>
   <input type="file" id="fileInput" accept=".json" style="display:none">
@@ -709,7 +724,112 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
   </div>
 </div>
 
-<script>
+<script type="module">
+// ── FIREBASE ────────────────────────────────────────────
+import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+                                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, writeBatch }
+                                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBie_QQ8tmHDnuosR7Goi5k7K87ft6zRXU",
+  authDomain: "movie-logs.firebaseapp.com",
+  projectId: "movie-logs",
+  storageBucket: "movie-logs.firebasestorage.app",
+  messagingSenderId: "966109923364",
+  appId: "1:966109923364:web:c4b672666c2c132e2230b1"
+};
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db_fs  = getFirestore(fbApp);
+
+let currentUser = null;
+
+// Firestore paths for the signed-in user
+function colEntries(){ return collection(db_fs,`users/${currentUser.uid}/entries`); }
+function docWL()     { return doc(db_fs,`users/${currentUser.uid}/meta/watchlist`); }
+
+// ── SAVE entry to Firestore ──────────────────────────────
+async function fsSave(entry){
+  if(!currentUser) return;
+  await setDoc(doc(db_fs,`users/${currentUser.uid}/entries/${entry.id}`), entry);
+  flashCloud();
+}
+// ── DELETE entry from Firestore ──────────────────────────
+async function fsDelete(id){
+  if(!currentUser) return;
+  await deleteDoc(doc(db_fs,`users/${currentUser.uid}/entries/${id}`));
+}
+// ── SAVE watchlist to Firestore ──────────────────────────
+async function fsWLSave(wl){
+  if(!currentUser) return;
+  await setDoc(docWL(),{items: wl});
+}
+// ── LOAD all data from Firestore ─────────────────────────
+async function fsLoad(){
+  if(!currentUser) return;
+  toast('☁️ Loading your data…', 60000);
+  // Load entries
+  const snap = await getDocs(colEntries());
+  DATA = snap.docs.map(d => d.data());
+  // Load watchlist
+  const wlSnap = await getDoc(docWL());
+  if(wlSnap.exists()) saveWL(wlSnap.data().items || []);
+  toast('✅ Synced!', 2000);
+  renderLog(); renderFavs(); renderWL();
+}
+
+// Tiny cloud flash
+function flashCloud(){
+  let el=document.getElementById('cloudFlash');
+  if(!el){
+    el=document.createElement('span');el.id='cloudFlash';
+    el.style.cssText='position:fixed;top:14px;right:14px;font-size:13px;opacity:0;transition:opacity 0.3s;z-index:200;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.textContent='☁️';el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0',1200);
+}
+
+// Auth UI
+function updateAuthUI(){
+  const ico=document.getElementById('authIco');
+  const lbl=document.getElementById('authLabel');
+  const sub=document.getElementById('authSub');
+  const arr=document.getElementById('authArrow');
+  if(currentUser){
+    ico.textContent='✅';
+    lbl.textContent=currentUser.displayName||'Signed in';
+    sub.textContent=currentUser.email+' — tap to sign out';
+    arr.textContent='';
+  } else {
+    ico.textContent='🔑';
+    lbl.textContent='Sign in with Google';
+    sub.textContent='Sync everything to the cloud';
+    arr.textContent='›';
+  }
+}
+
+document.getElementById('authBtn').addEventListener('click', async()=>{
+  closeSheet();
+  if(currentUser){
+    await signOut(auth);
+    toast('Signed out');
+  } else {
+    try{
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch(e){ toast('❌ Sign-in failed: '+e.message); }
+  }
+});
+
+onAuthStateChanged(auth, async user=>{
+  currentUser = user;
+  updateAuthUI();
+  if(user){ await fsLoad(); }
+});
+
+// ── CONSTANTS ────────────────────────────────────────────
 const RAWG='3bd7e4646af94b799692b80a858ce3e8';
 const TMDB='f387c81953ce058f114109b8c1a7fee5';
 const TMDB_IMG='https://image.tmdb.org/t/p/w200';
@@ -718,24 +838,14 @@ const RATINGS=['skip','mediocre','decent','excellent','peak'];
 const RATING_LABELS={skip:'Skip',mediocre:'Mediocre',decent:'Decent',excellent:'Excellent',peak:'Peak'};
 const RATING_CLASS={skip:'r-skip',mediocre:'r-mediocre',decent:'r-decent',excellent:'r-excellent',peak:'r-peak'};
 
-// DB
-const DB_NAME='LoggerDB2',DB_VER=1,STORE='entries';
-let db=null;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains(STORE))e.target.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e.target.error)});}
-function dbGetAll(){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readonly').objectStore(STORE).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});}
-function dbPut(e){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).put(e);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)});}
-function dbDelete(id){return new Promise((res,rej)=>{const r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)});}
-
-function getWL(){return JSON.parse(localStorage.getItem('logger-wl')||'[]');}
-function saveWL(a){localStorage.setItem('logger-wl',JSON.stringify(a));}
-function autoBackup(){
-  localStorage.setItem('logger-backup',JSON.stringify({
-    exported:new Date().toISOString(),
-    entries:DATA,
-    watchlist:getWL()
-  }));
+// ── LOCAL WATCHLIST (also synced to Firestore) ───────────
+function getWL(){ return JSON.parse(localStorage.getItem('logger-wl')||'[]'); }
+function saveWL(a){
+  localStorage.setItem('logger-wl', JSON.stringify(a));
+  fsWLSave(a); // mirror to Firestore
 }
-function todayVal(){return new Date().toISOString().slice(0,10);}
+
+function todayVal(){ return new Date().toISOString().slice(0,10); }
 
 let DATA=[],filter='all',sortBy='new';
 let editId=null,mType='movie',mRating=2,mPoster='',mTitle='',mFav=false,mGenre='',mYear='';
@@ -830,23 +940,30 @@ function openEdit(id){const e=DATA.find(x=>x.id===id);if(e)openModal(e);}
 async function toggleFav(id,ev){
   ev.stopPropagation();
   const e=DATA.find(x=>x.id===id);if(!e)return;
-  e.fav=!e.fav;await dbPut(e);autoBackup();
+  e.fav=!e.fav;
+  await fsSave(e);
   renderLog();renderFavs();
   toast(e.fav?'❤️ Added to favourites':'Removed from favourites');
 }
 async function delEntry(id,ev){
   ev.stopPropagation();
   if(!confirm('Delete this entry?'))return;
-  await dbDelete(id);DATA=DATA.filter(x=>x.id!==id);
-  renderLog();renderFavs();autoBackup();toast('Deleted');
+  await fsDelete(id);
+  DATA=DATA.filter(x=>x.id!==id);
+  renderLog();renderFavs();
+  toast('Deleted');
 }
 
 // ── RENDER FAVS ─────────────────────────────────────────
+let favFilter='all';
 function renderFavs(){
-  const favs=DATA.filter(x=>x.fav);
+  const favs=DATA.filter(x=>x.fav&&(favFilter==='all'||x.type===favFilter));
   const el=document.getElementById('fav-list');
-  if(!favs.length){
+  if(!DATA.filter(x=>x.fav).length){
     el.innerHTML='<div class="empty"><span class="empty-ico">🤍</span><div class="empty-title">No favourites yet</div><div class="empty-sub">Tap ❤️ on any entry to add it here</div></div>'+FOOTER;return;
+  }
+  if(!favs.length){
+    el.innerHTML='<div class="empty"><span class="empty-ico">🔍</span><div class="empty-title">None in this category</div><div class="empty-sub">Try a different filter</div></div>'+FOOTER;return;
   }
   favs.sort((a,b)=>b.id-a.id);
   el.innerHTML=favs.map((e,i)=>{
@@ -855,7 +972,7 @@ function renderFavs(){
     const thumb=e.poster
       ?`<img class="fav-thumb" src="${e.poster}" loading="lazy" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="fav-ph" style="display:none">${icon}</div>`
       :`<div class="fav-ph">${icon}</div>`;
-    return `<div class="fav-card ${e.type}" style="animation-delay:${i*0.04}s">
+    return `<div class="fav-card ${e.type}" style="animation-delay:${i*0.04}s" onclick="openEdit(${e.id})">
       ${thumb}
       <div class="fav-info">
         <div class="fav-title">${e.title}</div>
@@ -866,6 +983,14 @@ function renderFavs(){
     </div>`;
   }).join('')+FOOTER;
 }
+
+// Wire fav filter tabs
+document.querySelectorAll('[data-ff]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-ff]').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');favFilter=btn.dataset.ff;renderFavs();
+  });
+});
 
 // ── RENDER WATCHLIST ────────────────────────────────────
 function renderWL(){
@@ -895,25 +1020,14 @@ function renderWL(){
 }
 function wlDel(i){const wl=getWL();wl.splice(i,1);saveWL(wl);renderWL();toast('Removed from watchlist');}
 
-async function wlLog(i){
+function wlLog(i){
   const wl=getWL();
   const item=wl[i];
-  // Build entry — default status Watched/Completed, rating Decent
-  const entryId=Date.now();
-  const statusDefault=item.type==='game'?'done':item.type==='series'?'done':'done';
-  const entry={
-    id:entryId,type:item.type,title:item.title,
-    poster:item.poster||'',genre:item.genre||'',year:item.year||'',
-    status:statusDefault,rating:'decent',fav:false,rewatched:false,notes:''
-  };
-  await dbPut(entry);
-  DATA.unshift(entry);
-  // Remove from watchlist
-  wl.splice(i,1);saveWL(wl);
-  autoBackup();
-  renderWL();renderLog();renderFavs();
-  toast(`✅ Logged "${item.title}"!`);
+  // Store index so save handler can remove from watchlist after
+  wlLogIdx=i;
+  openModal(null,item);
 }
+let wlLogIdx=-1;
 
 // ── WATCHLIST SEARCH ────────────────────────────────────
 let wlType='movie',wlPending=null,wlSearchTmr=null;
@@ -998,15 +1112,12 @@ document.getElementById('settingsBtn').addEventListener('click',openSheet);
 sheetOverlay.addEventListener('click',closeSheet);
 document.getElementById('exportBtn').addEventListener('click',()=>{
   closeSheet();
-  const payload={
-    exported:new Date().toISOString(),
-    entries:DATA,
-    watchlist:getWL()
-  };
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const payload=JSON.stringify({exported:new Date().toISOString(),entries:DATA,watchlist:getWL()},null,2);
+  const blob=new Blob([payload],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`logger-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
-  toast('✅ Backup saved!');
+  a.download=`logger-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast('✅ Backup downloaded!');
 });
 document.getElementById('importBtn').addEventListener('click',()=>{closeSheet();document.getElementById('fileInput').click();});
 document.getElementById('fileInput').addEventListener('change',async e=>{
@@ -1015,23 +1126,19 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
     const json=JSON.parse(await file.text());
     const entries=json.entries||json;
     if(!Array.isArray(entries))throw 0;
-    if(!confirm(`Restore ${entries.length} log entries${json.watchlist?` + ${json.watchlist.length} watchlist items`:''}? Will merge with current data.`))return;
-    // Restore log entries
+    if(!confirm(`Restore ${entries.length} log entries${json.watchlist?` + ${json.watchlist.length} watchlist items`:''}? Will merge.`))return;
     const ids=new Set(DATA.map(x=>x.id));
     const add=entries.filter(x=>!ids.has(x.id));
-    for(const en of add)await dbPut(en);
-    DATA=await dbGetAll();
-    // Restore watchlist — merge, no dupes
+    for(const en of add){ await fsSave(en); DATA.push(en); }
     if(Array.isArray(json.watchlist)&&json.watchlist.length){
       const wl=getWL();
       const wlTitles=new Set(wl.map(x=>x.title.toLowerCase()));
       const wlAdd=json.watchlist.filter(x=>!wlTitles.has(x.title.toLowerCase()));
-      saveWL([...wl,...wlAdd]);
-      renderWL();
+      if(wlAdd.length) saveWL([...wl,...wlAdd]);
     }
-    renderLog();renderFavs();autoBackup();
-    toast(`✅ Restored ${add.length} log entries!`);
-  }catch{toast('❌ Invalid backup file');}
+    renderLog();renderFavs();renderWL();
+    toast(`✅ ${add.length} entries restored!`);
+  }catch{ toast('❌ Invalid backup file'); }
   e.target.value='';
 });
 
@@ -1167,10 +1274,10 @@ function openModal(entry,prefill){
   setTimeout(()=>searchInp.focus(),120);
 }
 document.getElementById('openBtn').addEventListener('click',()=>openModal(null));
-document.getElementById('cancelBtn').addEventListener('click',()=>overlay.classList.remove('show'));
-overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('show');});
+document.getElementById('cancelBtn').addEventListener('click',()=>{wlLogIdx=-1;overlay.classList.remove('show');});
+overlay.addEventListener('click',e=>{if(e.target===overlay){wlLogIdx=-1;overlay.classList.remove('show');}});
 
-// Save — remove from watchlist after logging
+// Save
 document.getElementById('saveBtn').addEventListener('click',async()=>{
   const title=(mTitle||searchInp.value).trim();
   if(!title){searchInp.style.boxShadow='0 0 0 2px var(--red)';setTimeout(()=>searchInp.style.boxShadow='',900);searchInp.focus();return;}
@@ -1185,54 +1292,23 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
     rating:ratingKey,fav:mFav,rewatched:!!isDup,
     notes:document.getElementById('fNotes').value.trim()
   };
-  await dbPut(entry);
-  if(editId)DATA=DATA.map(x=>x.id===editId?entry:x);else DATA.unshift(entry);
-  autoBackup();
-  // Remove from watchlist when logged
+  await fsSave(entry);
+  if(editId) DATA=DATA.map(x=>x.id===editId?entry:x); else DATA.unshift(entry);
+  // Remove from watchlist
   const wl=getWL();
-  const wi=wl.findIndex(x=>x.title.toLowerCase()===title.toLowerCase());
+  const wi=wlLogIdx>=0?wlLogIdx:wl.findIndex(x=>x.title.toLowerCase()===title.toLowerCase());
   if(wi>=0){wl.splice(wi,1);saveWL(wl);}
+  wlLogIdx=-1;
   overlay.classList.remove('show');
-  renderLog();renderFavs();
+  renderLog();renderFavs();renderWL();
   toast(isDup?'✅ Saved as Rewatched!':(editId?'✅ Updated!':'✅ Saved!'));
 });
 
-// Boot
-async function init(){
-  await openDB();DATA=await dbGetAll();
-  if(!DATA.length){
-    for(const k of['logger-backup','vault-backup']){
-      const b=localStorage.getItem(k);
-      if(b){
-        try{
-          const p=JSON.parse(b);
-          const es=p.entries||p;
-          if(Array.isArray(es)&&es.length){
-            for(const e of es)await dbPut(e);
-            DATA=await dbGetAll();
-            // Also restore watchlist if present
-            if(Array.isArray(p.watchlist)&&p.watchlist.length&&!getWL().length){
-              saveWL(p.watchlist);
-            }
-            toast('✅ Data restored!',3000);break;
-          }
-        }catch(e){}
-      }
-    }
-  }
-  if(!DATA.length){
-    const seed=[
-      {id:new Date('2026-03-09T12:00:00').getTime(),type:'movie', title:'Dune: Part Two', poster:'https://image.tmdb.org/t/p/w200/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',genre:'Sci-Fi',year:'2024',status:'done',rating:'excellent',fav:false,rewatched:false,notes:'Visually stunning.'},
-      {id:new Date('2026-02-15T12:00:00').getTime(),type:'series',title:'Severance',      poster:'https://image.tmdb.org/t/p/w200/sWgBv5LPv2N160Ovv2tpnuFZvpd.jpg',genre:'Thriller',year:'2022',status:'watching',rating:'peak',fav:true,rewatched:false,notes:'Mind-bending.'},
-      {id:new Date('2026-02-08T12:00:00').getTime(),type:'movie', title:'Drive',           poster:'https://image.tmdb.org/t/p/w200/602vevIURmpzkHMvfcoPP3oUxGf.jpg',genre:'Crime',year:'2011',status:'done',rating:'peak',fav:true,rewatched:false,notes:'Ryan Gosling.'},
-      {id:new Date('2026-01-20T12:00:00').getTime(),type:'game',  title:'Elden Ring',      poster:'https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg',genre:'Action RPG',year:'2022',status:'done',rating:'peak',fav:true,rewatched:false,notes:'Masterpiece.'},
-      {id:new Date('2026-01-05T12:00:00').getTime(),type:'game',  title:'Hollow Knight',   poster:'https://media.rawg.io/media/games/4cf/4cfc6b7f1850590a4634b08bfab308ab.jpg',genre:'Metroidvania',year:'2017',status:'playing',rating:'excellent',fav:false,rewatched:false,notes:''},
-    ];
-    for(const e of seed)await dbPut(e);DATA=await dbGetAll();
-  }
-  setStatusOpts();renderLog();
-}
-init();
+// Boot — data loads via onAuthStateChanged above
+DATA = [];
+setStatusOpts();
+renderLog();
+updateAuthUI();
 </script>
 </body>
 </html>
