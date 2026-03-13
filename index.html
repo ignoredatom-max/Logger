@@ -1309,6 +1309,13 @@ DATA = [];
 setStatusOpts();
 renderLog();
 updateAuthUI();
+
+// ── EXPOSE TO WINDOW (required for onclick in HTML inside type=module) ──
+window.toggleFav   = toggleFav;
+window.delEntry    = delEntry;
+window.openEdit    = openEdit;
+window.wlLog       = wlLog;
+window.wlDel       = wlDel;
 </script>
 </body>
 </html>
