@@ -559,43 +559,69 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 /* ── SHARE CARD (the actual card to screenshot) ── */
 .share-card{
   width:100%;border-radius:20px;overflow:hidden;
-  background:var(--bg2);
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  background:#1e1e1e;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
   font-family:Inter,sans-serif;
 }
-.sc-poster-wrap{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--bg3);}
-.sc-poster{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.85);}
+.sc-poster-wrap{
+  position:relative;width:100%;
+  aspect-ratio:4/3;overflow:hidden;background:#2a2a2a;
+}
+.sc-poster{width:100%;height:100%;object-fit:cover;display:block;}
+.sc-poster-gradient{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.6) 100%);
+}
 .sc-poster-ph{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-  font-size:64px;background:var(--bg3);
+  font-size:80px;background:#2a2a2a;
 }
 .sc-rating-badge{
-  position:absolute;top:12px;right:12px;
-  padding:6px 12px;border-radius:10px;
-  font-size:13px;font-weight:800;letter-spacing:0.5px;
-  backdrop-filter:blur(8px);
+  position:absolute;top:14px;right:14px;
+  padding:8px 14px;border-radius:12px;
+  font-size:15px;font-weight:900;letter-spacing:0.3px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
 }
-.sc-body{padding:16px 18px 18px;}
-.sc-meta{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-.sc-title{font-size:22px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:8px;}
+.sc-body{padding:18px 20px 20px;background:#1e1e1e;}
+.sc-meta{
+  font-size:11px;color:#888;letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.sc-title{
+  font-size:26px;font-weight:800;color:#f0f0f0;
+  line-height:1.15;margin-bottom:12px;
+}
 .sc-rating-word{
-  display:inline-block;font-size:12px;font-weight:700;
-  padding:3px 10px;border-radius:20px;margin-bottom:10px;
+  display:inline-flex;align-items:center;
+  font-size:13px;font-weight:800;
+  padding:5px 14px;border-radius:20px;margin-bottom:14px;
   letter-spacing:0.3px;
 }
 .sc-note{
-  font-size:13px;color:var(--text2);line-height:1.5;
-  border-left:2px solid var(--border2);padding-left:10px;
-  margin-bottom:14px;font-style:italic;
+  font-size:13px;color:#aaa;line-height:1.6;
+  border-left:3px solid #444;padding-left:12px;
+  margin-bottom:16px;font-style:italic;
   display:none;
 }
 .sc-note.show{display:block;}
-.sc-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:12px;}
-.sc-name{font-size:13px;font-weight:700;color:var(--text);}
-.sc-brand{font-size:11px;color:var(--text3);margin-top:1px;}
-.sc-logo-wrap{display:flex;align-items:center;gap:2px;}
-.sc-logo-l{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:var(--text);line-height:1;}
-.sc-logo-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);margin-left:1px;margin-top:8px;}
+.sc-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;
+  margin-top:4px;
+}
+.sc-name{font-size:14px;font-weight:700;color:#f0f0f0;}
+.sc-brand{font-size:11px;color:#666;margin-top:2px;}
+.sc-logo-wrap{display:flex;align-items:center;gap:3px;}
+.sc-logo-l{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:28px;color:#f0f0f0;line-height:1;
+}
+.sc-logo-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#2d7ff9;margin-left:2px;margin-top:10px;
+}
 
 /* share actions */
 .share-actions{display:flex;gap:10px;width:100%;}
@@ -830,6 +856,7 @@ body.readonly .row{cursor:default}
     <div class="share-card" id="shareCard">
       <div class="sc-poster-wrap">
         <img class="sc-poster" id="scPoster" src="" alt="">
+        <div class="sc-poster-gradient"></div>
         <div class="sc-poster-ph" id="scPosterPh"></div>
         <div class="sc-rating-badge" id="scRatingBadge"></div>
       </div>
@@ -1514,9 +1541,9 @@ function openShareCard(){
   badge.style.background = RATING_BG[rKey];
   badge.style.color = RATING_COLOURS[rKey];
 
-  // Meta
-  document.getElementById('scMeta').textContent =
-    [icon, entry.genre, entry.year].filter(Boolean).join(' · ');
+  // Meta — icon · genre · year
+  document.getElementById('scMeta').innerHTML =
+    `<span>${icon}</span>${[entry.genre, entry.year].filter(Boolean).map(x=>`<span>${x.toUpperCase()}</span>`).join('<span style="color:#555">·</span>')}`;
 
   // Title
   document.getElementById('scTitle').textContent = entry.title;
