@@ -113,10 +113,10 @@ body::before{content:none}
 .month-header{
   padding:7px 16px;
   font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-  color:var(--text3);
-  background:var(--bg);
+  color:var(--text2);
+  background:var(--bg3);
   border-top:1px solid var(--border2);
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid var(--border2);
   position:sticky;top:0;z-index:10;
 }
 
@@ -534,6 +534,26 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .row{animation:fadeUp 0.3s ease both}
 .wl-card{animation:fadeUp 0.3s ease both}
 .fav-card{animation:fadeUp 0.3s ease both}
+
+/* ── READ-ONLY MODE ───────────────────────────── */
+body.readonly .add-btn,
+body.readonly #openBtn,
+body.readonly .row-del,
+body.readonly .row-fav-inline,
+body.readonly #page-watchlist,
+body.readonly .nav-btn[data-page="watchlist"],
+body.readonly .settings-btn{display:none!important}
+body.readonly .row{cursor:default}
+.readonly-banner{
+  background:var(--bg3);border-bottom:1px solid var(--border2);
+  padding:8px 16px;font-size:12px;color:var(--text2);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.readonly-banner button{
+  background:var(--blue);color:#fff;border:none;padding:5px 12px;
+  border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
+  white-space:nowrap;
+}
 </style>
 </head>
 <body>
@@ -619,6 +639,12 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
     </div>
   </div>
   <div class="fav-list-inner" id="fav-list"></div>
+</div>
+
+<!-- READ-ONLY BANNER (shown to visitors not signed in) -->
+<div class="readonly-banner" id="readonlyBanner" style="display:none">
+  <span>👀 Viewing Aditya's diary — read only</span>
+  <button onclick="document.getElementById('authBtn').click();closeSheet&&closeSheet()">Sign in to edit</button>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -811,6 +837,14 @@ function updateAuthUI(){
   }
 }
 
+// Your Firebase UID — visitors load YOUR data when not signed in
+const OWNER_UID = 'kFMRmHi4hzakOaQFx7ccanUsIbl1';
+
+function setReadOnly(isReadOnly){
+  document.body.classList.toggle('readonly', isReadOnly);
+  document.getElementById('readonlyBanner').style.display = isReadOnly ? 'flex' : 'none';
+}
+
 document.getElementById('authBtn').addEventListener('click', async()=>{
   closeSheet();
   if(currentUser){
@@ -826,8 +860,31 @@ document.getElementById('authBtn').addEventListener('click', async()=>{
 onAuthStateChanged(auth, async user=>{
   currentUser = user;
   updateAuthUI();
-  if(user){ await fsLoad(); }
+  if(user){
+    setReadOnly(false);
+    await fsLoad();
+  } else {
+    // Load owner's public data for visitors
+    setReadOnly(true);
+    await fsLoadPublic();
+  }
 });
+
+// Load owner's entries publicly (no auth needed — Firestore rules allow public read)
+async function fsLoadPublic(){
+  try{
+    toast('📖 Loading diary…', 10000);
+    const snap = await getDocs(collection(db_fs,`users/${OWNER_UID}/entries`));
+    DATA = snap.docs.map(d => d.data());
+    toast('', 0);
+    renderLog(); renderFavs();
+  } catch(e){
+    toast('', 0);
+    // If rules block public read, just show empty
+    DATA = [];
+    renderLog();
+  }
+}
 
 // ── CONSTANTS ────────────────────────────────────────────
 const RAWG='3bd7e4646af94b799692b80a858ce3e8';
@@ -935,7 +992,7 @@ function renderRow(e,i){
   </div>`;
 }
 
-function openEdit(id){const e=DATA.find(x=>x.id===id);if(e)openModal(e);}
+function openEdit(id){ if(document.body.classList.contains('readonly')) return; const e=DATA.find(x=>x.id===id);if(e)openModal(e); }
 
 async function toggleFav(id,ev){
   ev.stopPropagation();
