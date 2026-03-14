@@ -221,6 +221,7 @@ body::before{content:none}
 .pill-rewatched{background:rgba(45,127,249,0.14);color:var(--blue)}
 
 .note-icon{font-size:11px;color:var(--text3);line-height:1}
+.row-type-ico{font-size:12px;line-height:1;}
 /* Heart lives inline with the tags in row-meta */
 .row-fav-inline{
   font-size:11px;background:none;border:none;cursor:pointer;
@@ -1120,7 +1121,8 @@ function renderRow(e,i){
   const rKey=RATINGS.includes(e.rating)?e.rating:'decent';
   const rBadge=`<span class="rating-badge ${RATING_CLASS[rKey]}">${RATING_LABELS[rKey]}</span>`;
   const sKey=e.rewatched?'rewatched':(e.status||'done');
-  const sPill=`<span class="pill ${pillCls[sKey]||'pill-done'}">${icon} ${getPillLabel(sKey,e.type)}</span>`;
+  const sPill=`<span class="pill ${pillCls[sKey]||'pill-done'}">${getPillLabel(sKey,e.type)}</span>`;
+  const typeIco=`<span class="row-type-ico">${icon}</span>`;
   const noteIco=e.notes?`<span class="note-icon">ᯓ</span>`:'';
   const fav=`<button class="row-fav-inline ${e.fav?'on':''}" onclick="toggleFav(${e.id},event)">${e.fav?'❤️':'🤍'}</button>`;
   return `<div class="row ${e.type}" style="animation-delay:${Math.min(i*0.03,0.4)}s" onclick="openEdit(${e.id})">
@@ -1128,7 +1130,7 @@ function renderRow(e,i){
     ${thumb}
     <div class="row-info">
       <div class="row-title-wrap"><span class="row-title">${e.title}</span><span class="row-year">${e.year||''}</span></div>
-      <div class="row-meta">${rBadge}${sPill}${fav}${noteIco}</div>
+      <div class="row-meta">${typeIco}${rBadge}${sPill}${fav}${noteIco}</div>
     </div>
     <button class="row-del" onclick="delEntry(${e.id},event)">✕</button>
   </div>`;
