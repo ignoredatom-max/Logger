@@ -655,21 +655,14 @@ body.readonly .row{cursor:default}
   white-space:nowrap;
 }
 
-/* ── STATS STRIP ──────────────────────────────── */
-.stats-strip{
-  display:flex;gap:0;
+/* ── STATS PARA ───────────────────────────────── */
+.stats-para{
+  padding:8px 16px 9px;
   border-bottom:1px solid var(--border);
-  overflow-x:auto;scrollbar-width:none;
+  font-size:11px;color:var(--text3);
+  line-height:1.5;letter-spacing:0.1px;
 }
-.stats-strip::-webkit-scrollbar{display:none}
-.stat-item{
-  flex:1;min-width:0;padding:10px 8px;
-  border-right:1px solid var(--border);
-  text-align:center;
-}
-.stat-item:last-child{border-right:none}
-.stat-val{font-size:14px;font-weight:800;color:var(--text);line-height:1}
-.stat-lbl{font-size:9px;color:var(--text3);margin-top:3px;letter-spacing:0.3px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats-para b{color:var(--text2);font-weight:600;}
 
 /* ── AI RECS ──────────────────────────────────── */
 .recs-section{padding:12px 14px 6px;}
@@ -772,11 +765,8 @@ body.readonly .row{cursor:default}
     </select>
     <button class="add-btn" id="openBtn">+ Add</button>
   </div>
-  <div class="stats-strip" id="statsStrip" style="display:none">
-    <div class="stat-item"><div class="stat-val" id="stTotal">0</div><div class="stat-lbl">Logged</div></div>
-    <div class="stat-item"><div class="stat-val" id="stPeak">—</div><div class="stat-lbl">Peak rated</div></div>
-    <div class="stat-item"><div class="stat-val" id="stGenre">—</div><div class="stat-lbl">Top genre</div></div>
-    <div class="stat-item"><div class="stat-val" id="stMonth">—</div><div class="stat-lbl">Best month</div></div>
+  <div class="stats-para" id="statsStrip" style="display:none">
+    <span id="stParaText"></span>
   </div>
   <div class="list" id="list"></div>
 </div>
@@ -819,6 +809,7 @@ body.readonly .row{cursor:default}
       <button class="recs-generate-btn" id="recsGenBtn">✦ Generate recommendations</button>
     </div>
   </div>
+  <div class="list-footer">made with love by Aditya ♥️</div>
 </div>
 
 <!-- FAVOURITES PAGE -->
@@ -1293,12 +1284,11 @@ document.querySelectorAll('[data-ff]').forEach(btn=>{
   });
 });
 
-// ── RENDER WATCHLIST ────────────────────────────────────
 function renderWL(){
   const wl=getWL();
   const el=document.getElementById('wl-list');
   if(!wl.length){
-    el.innerHTML='<div class="empty"><span class="empty-ico">🔖</span><div class="empty-title">Watchlist is empty</div><div class="empty-sub">Search above and add something</div></div>'+FOOTER;return;
+    el.innerHTML='<div class="empty"><span class="empty-ico">🔖</span><div class="empty-title">Watchlist is empty</div><div class="empty-sub">Search above and add something</div></div>';return;
   }
   el.innerHTML=wl.map((item,i)=>{
     const icon=item.type==='game'?'🎮':item.type==='movie'?'🎬':'📺';
@@ -1317,7 +1307,7 @@ function renderWL(){
         <button class="wl-del" onclick="wlDel(${i})">✕</button>
       </div>
     </div>`;
-  }).join('')+FOOTER;
+  }).join('');
 }
 function wlDel(i){const wl=getWL();wl.splice(i,1);saveWL(wl);renderWL();toast('Removed from watchlist');}
 
@@ -1709,44 +1699,53 @@ updateAuthUI();
 
 // ── STATS STRIP ──────────────────────────────────────────
 function renderStats(){
-  if(!DATA.length){ document.getElementById('statsStrip').style.display='none'; return; }
-  document.getElementById('statsStrip').style.display='flex';
+  const strip = document.getElementById('statsStrip');
+  if(!DATA.length){ strip.style.display='none'; return; }
+  strip.style.display='block';
 
-  document.getElementById('stTotal').textContent = DATA.length;
+  const now = new Date();
+  const thisMonth = DATA.filter(e => {
+    const d = new Date(e.id);
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  }).length;
 
-  // Peak rated count
-  const peakCount = DATA.filter(x=>x.rating==='peak').length;
-  document.getElementById('stPeak').textContent = peakCount||'—';
+  const total = DATA.length;
 
   // Top genre
   const genres = {};
-  DATA.forEach(e=>{ if(e.genre){ e.genre.split(',').forEach(g=>{ const t=g.trim(); if(t) genres[t]=(genres[t]||0)+1; }); } });
+  DATA.forEach(e=>{ if(e.genre){ e.genre.split(',').forEach(g=>{ const t=g.trim(); if(t) genres[t]=(genres[t]||0)+1; }); }});
   const topGenre = Object.entries(genres).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('stGenre').textContent = topGenre ? topGenre[0].split(' ')[0] : '—';
 
-  // Most active month
-  const months = {};
-  DATA.forEach(e=>{ const m=new Date(e.id).toLocaleDateString('en-IN',{month:'short'}); months[m]=(months[m]||0)+1; });
-  const topMonth = Object.entries(months).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('stMonth').textContent = topMonth ? topMonth[0] : '—';
+  // Peak rated
+  const peakCount = DATA.filter(x=>x.rating==='peak').length;
+
+  let sentence = `logged <b>${thisMonth}</b> this month, <b>${total}</b> total.`;
+  if(topGenre) sentence += ` big on <b>${topGenre[0]}</b> lately.`;
+  if(peakCount>0) sentence += ` <b>${peakCount}</b> absolute peak${peakCount===1?'':'s'}.`;
+
+  document.getElementById('stParaText').innerHTML = sentence;
 }
 
 // ── AI RECOMMENDATIONS (Gemini) ──────────────────────────
 const GEMINI_KEY = 'AIzaSyATeUfWD-dHKP-zy7SvFq8ursgGi7YqmhY';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`;
 
 async function callGemini(prompt){
   const res = await fetch(GEMINI_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      contents:[{parts:[{text: prompt}]}],
+      contents:[{role:'user',parts:[{text: prompt}]}],
       generationConfig:{temperature:0.8, maxOutputTokens:800}
     })
   });
+  if(!res.ok){
+    const err = await res.json();
+    console.error('Gemini error:', err);
+    throw new Error(err?.error?.message||'API error');
+  }
   const data = await res.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  // strip ```json fences
   return text.replace(/```json|```/g,'').trim();
 }
 
@@ -1793,7 +1792,7 @@ async function generateRecs(mood=''){
       </div>`;
     }).join('') + '</div>';
   } catch(e){
-    recCards.innerHTML = '<div class="recs-loading">Couldn\'t get recommendations — check your Gemini key</div>';
+    recCards.innerHTML = `<div class="recs-loading">❌ ${e.message||'Something went wrong'}</div>`;
     console.error(e);
   }
 }
