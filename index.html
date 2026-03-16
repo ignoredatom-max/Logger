@@ -1635,7 +1635,6 @@ function renderStats(){
   const topGenre = Object.entries(genres).sort((a,b)=>b[1]-a[1])[0];
 
   let s = `logged <b>${thisMonth}</b> this month, <b>${total}</b> total`;
-  if(topGenre) s += ` · <b>${topGenre[0]}</b>`;
   el.innerHTML = s;
 }
 
