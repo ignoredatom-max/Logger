@@ -1,0 +1,118 @@
+LOGGER — Patch Notes
+Personal Media Diary by Aditya
+————————————————————————————————————————
+
+
+1.5.0
+16 March 2026
+
+  - Stats now live in the subtitle under the Logger wordmark
+  - Shows how many you logged this month and total count
+  - Numbers are bold, fits in one line, doesn't feel out of place
+  - Subtitle goes back to "Aditya's personal media diary" when empty
+  - Fixed: going back to Log from Favourites no longer hides your entries
+  - Fixed: Log filter now resets to All when switching pages
+
+
+1.4.0
+14 March 2026
+
+  - Added share cards
+  - Tap any entry → edit → Share Card button appears at the bottom
+  - Card shows the poster, title, your rating, your note, Logger branding
+  - Rating colours match the app — Peak is purple, Excellent is green, etc.
+  - Tap Save Image to download as a PNG — crisp enough for stories
+  - Share button only shows on existing entries, not when adding new ones
+
+
+1.3.1
+14 March 2026
+
+  - Month headers are now a lighter shade of grey so they actually stand out
+  - "Done" is gone — it's now Watched, Finished, or Completed depending on type
+  - Type icon now appears before the rating badge on every row
+  - Rewatched tag is now indigo — was blue which clashed with other things
+  - Status dropdown in the add/edit modal updated to match
+
+
+1.3.0
+13 March 2026
+
+  - Your diary is now public — anyone with the link can see your log
+  - Visitors get a read-only view, no buttons, no editing, nothing
+  - Banner shown to visitors: "Viewing Aditya's diary — read only"
+  - Sign in with your own Google account and you get your own private diary
+  - Firestore rules updated so entries are readable by anyone but only
+    writable by you
+
+
+1.2.1
+13 March 2026
+
+  - Removed the blue tint from every background colour
+  - Everything is proper neutral grey now — #1a1a1a base
+  - Background glow gradient is gone
+  - App icon added — italic L with blue dot, dark grey rounded background
+  - Two sizes: 192×192 and 512×512
+  - manifest.json updated to use the real PNG icons
+
+
+1.2.0
+13 March 2026
+
+  - Switched storage from IndexedDB + localStorage to Firebase
+  - Sign in with Google — your data follows you everywhere
+  - Every save, edit and delete syncs instantly to Firestore
+  - Small ☁️ flashes in the corner to confirm each sync
+  - Removed Google Drive sync
+  - Removed the weekly backup reminder banner
+  - Removed the localStorage compression system
+  - Kept manual JSON download and restore — still in Settings
+  - Settings sheet now has Sign in with Google instead of Drive
+
+
+1.1.1
+11 March 2026
+
+  - Rating slider labels now align properly
+  - Reduced header padding — was wasting space
+  - Watching tag is mint now, not teal
+  - Dropped tag is pink now — red was already used for Skip rating
+  - Adding something you already logged now tags it as Rewatched
+    instead of creating a duplicate entry
+  - Filter tab order locked to Films → Series → Games everywhere
+
+
+1.1.0
+11 March 2026
+
+  - Renamed from Vault to Logger
+  - New wordmark — italic L, thin OGGER, small blue dot
+  - Rebuilt the list layout to match Letterboxd exactly
+  - Tight row spacing, day number, poster thumbnail, gradient title fade
+  - Type colour bar moved to the right edge of each row
+  - Month group headers added, sticky at top while scrolling
+  - Tapping a row opens the edit modal
+  - Heart and delete buttons work independently without opening modal
+  - Log it on watchlist now removes the item after logging
+  - Animations added throughout — rows stagger in, counts pulse
+  - Settings sheet added behind the gear icon
+  - "made with love by Aditya ♥️" footer on every list
+  - Removed all seed data — starts blank
+
+
+1.0.0
+11 March 2026
+
+  - First version
+  - Log films, series and games
+  - TMDB for movie and series search
+  - RAWG for game search
+  - 5 ratings: Skip, Mediocre, Decent, Excellent, Peak
+  - Watchlist and Favourites pages
+  - Backup and restore via JSON
+  - Installable on Android as a PWA
+
+
+————————————————————————————————————————
+made with love by Aditya ♥️
