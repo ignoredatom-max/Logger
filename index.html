@@ -218,7 +218,7 @@ body::before{content:none}
 .pill-watching{background:rgba(0,199,190,0.14); color:var(--mint)}
 .pill-want    {background:rgba(255,214,10,0.12); color:var(--yellow)}
 .pill-dropped {background:rgba(255,55,95,0.14);  color:var(--pink)}
-.pill-rewatched{background:rgba(45,127,249,0.14);color:var(--blue)}
+.pill-rewatched{background:rgba(88,86,214,0.18);color:#7b79e8}
 
 .note-icon{font-size:11px;color:var(--text3);line-height:1}
 .row-type-ico{font-size:12px;line-height:1;}
@@ -654,6 +654,85 @@ body.readonly .row{cursor:default}
   border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
   white-space:nowrap;
 }
+
+/* ── STATS STRIP ──────────────────────────────── */
+.stats-strip{
+  display:flex;gap:0;
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.stats-strip::-webkit-scrollbar{display:none}
+.stat-item{
+  flex:1;min-width:0;padding:10px 8px;
+  border-right:1px solid var(--border);
+  text-align:center;
+}
+.stat-item:last-child{border-right:none}
+.stat-val{font-size:14px;font-weight:800;color:var(--text);line-height:1}
+.stat-lbl{font-size:9px;color:var(--text3);margin-top:3px;letter-spacing:0.3px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── AI RECS ──────────────────────────────────── */
+.recs-section{padding:12px 14px 6px;}
+.recs-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.recs-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase}
+.recs-mood-btn{
+  font-size:11px;color:var(--blue);background:none;border:none;
+  cursor:pointer;font-family:Inter,sans-serif;font-weight:600;padding:0;
+}
+.mood-input-wrap{
+  margin-bottom:10px;
+  background:var(--bg3);border-radius:10px;
+  padding:8px 10px;border:1px solid var(--border2);
+  display:none;align-items:center;gap:8px;
+}
+.mood-input-wrap.show{display:flex}
+.mood-inp{
+  flex:1;background:none;border:none;outline:none;
+  font-size:12px;color:var(--text);font-family:Inter,sans-serif;
+}
+.mood-inp::placeholder{color:var(--text3)}
+.mood-go{
+  background:var(--blue);color:#fff;border:none;
+  padding:4px 10px;border-radius:7px;font-size:11px;
+  font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
+  white-space:nowrap;
+}
+.rec-cards{display:flex;flex-direction:column;gap:8px;}
+.rec-card{
+  background:var(--bg3);border-radius:12px;
+  padding:11px 12px;border:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:10px;
+}
+.rec-poster{
+  width:34px;height:50px;border-radius:6px;
+  object-fit:cover;flex-shrink:0;background:var(--bg4);
+}
+.rec-poster-ph{
+  width:34px;height:50px;border-radius:6px;
+  background:var(--bg4);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.rec-info{flex:1;min-width:0}
+.rec-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.rec-meta{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.rec-why{font-size:11px;color:var(--text2);line-height:1.4;}
+.rec-add-btn{
+  background:rgba(0,197,102,0.1);border:none;color:var(--green);
+  padding:4px 10px;border-radius:8px;font-size:10px;
+  font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
+  white-space:nowrap;margin-top:6px;display:inline-block;
+}
+.recs-loading{text-align:center;padding:16px;font-size:12px;color:var(--text3);}
+.recs-generate-btn{
+  width:100%;padding:11px;background:transparent;
+  border:1px dashed var(--border2);border-radius:12px;
+  color:var(--text3);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:Inter,sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
 </style>
 </head>
 <body>
@@ -693,6 +772,12 @@ body.readonly .row{cursor:default}
     </select>
     <button class="add-btn" id="openBtn">+ Add</button>
   </div>
+  <div class="stats-strip" id="statsStrip" style="display:none">
+    <div class="stat-item"><div class="stat-val" id="stTotal">0</div><div class="stat-lbl">Logged</div></div>
+    <div class="stat-item"><div class="stat-val" id="stPeak">—</div><div class="stat-lbl">Peak rated</div></div>
+    <div class="stat-item"><div class="stat-val" id="stGenre">—</div><div class="stat-lbl">Top genre</div></div>
+    <div class="stat-item"><div class="stat-val" id="stMonth">—</div><div class="stat-lbl">Best month</div></div>
+  </div>
   <div class="list" id="list"></div>
 </div>
 
@@ -720,6 +805,20 @@ body.readonly .row{cursor:default}
     </div>
   </div>
   <div class="wl-list-inner" id="wl-list"></div>
+  <!-- AI RECS -->
+  <div class="recs-section" id="recsSection">
+    <div class="recs-header">
+      <span class="recs-title">✦ For You</span>
+      <button class="recs-mood-btn" id="moodToggle">🎭 Mood search</button>
+    </div>
+    <div class="mood-input-wrap" id="moodWrap">
+      <input class="mood-inp" id="moodInp" placeholder="e.g. something like Severance…">
+      <button class="mood-go" id="moodGo">Go</button>
+    </div>
+    <div id="recCards">
+      <button class="recs-generate-btn" id="recsGenBtn">✦ Generate recommendations</button>
+    </div>
+  </div>
 </div>
 
 <!-- FAVOURITES PAGE -->
@@ -1110,6 +1209,7 @@ function renderLog(){
     container.innerHTML=list.map((e,i)=>renderRow(e,i)).join('')+FOOTER;
   }
   refreshStats();
+  renderStats();
 }
 
 function renderRow(e,i){
@@ -1607,12 +1707,129 @@ setStatusOpts();
 renderLog();
 updateAuthUI();
 
+// ── STATS STRIP ──────────────────────────────────────────
+function renderStats(){
+  if(!DATA.length){ document.getElementById('statsStrip').style.display='none'; return; }
+  document.getElementById('statsStrip').style.display='flex';
+
+  document.getElementById('stTotal').textContent = DATA.length;
+
+  // Peak rated count
+  const peakCount = DATA.filter(x=>x.rating==='peak').length;
+  document.getElementById('stPeak').textContent = peakCount||'—';
+
+  // Top genre
+  const genres = {};
+  DATA.forEach(e=>{ if(e.genre){ e.genre.split(',').forEach(g=>{ const t=g.trim(); if(t) genres[t]=(genres[t]||0)+1; }); } });
+  const topGenre = Object.entries(genres).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stGenre').textContent = topGenre ? topGenre[0].split(' ')[0] : '—';
+
+  // Most active month
+  const months = {};
+  DATA.forEach(e=>{ const m=new Date(e.id).toLocaleDateString('en-IN',{month:'short'}); months[m]=(months[m]||0)+1; });
+  const topMonth = Object.entries(months).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stMonth').textContent = topMonth ? topMonth[0] : '—';
+}
+
+// ── AI RECOMMENDATIONS (Gemini) ──────────────────────────
+const GEMINI_KEY = 'AIzaSyATeUfWD-dHKP-zy7SvFq8ursgGi7YqmhY';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
+async function callGemini(prompt){
+  const res = await fetch(GEMINI_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      contents:[{parts:[{text: prompt}]}],
+      generationConfig:{temperature:0.8, maxOutputTokens:800}
+    })
+  });
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  // strip ```json fences
+  return text.replace(/```json|```/g,'').trim();
+}
+
+function buildLogSummary(){
+  const top = [...DATA]
+    .sort((a,b)=>RATINGS.indexOf(b.rating)-RATINGS.indexOf(a.rating))
+    .slice(0,15)
+    .map(e=>`${e.title} (${e.type}, ${e.rating}${e.genre?', '+e.genre:''})`)
+    .join('; ');
+  return top;
+}
+
+async function generateRecs(mood=''){
+  const recCards = document.getElementById('recCards');
+  recCards.innerHTML = '<div class="recs-loading">✦ Thinking…</div>';
+
+  const summary = buildLogSummary();
+  if(!summary){ recCards.innerHTML='<div class="recs-loading">Log some entries first!</div>'; return; }
+
+  const prompt = mood
+    ? `Based on someone who enjoyed: ${summary}
+       They want: "${mood}"
+       Suggest 3 movies/series/games they'd love. Reply ONLY with a JSON array like:
+       [{"title":"...","type":"movie|series|game","year":"...","genre":"...","why":"one line reason"}]`
+    : `Based on someone who enjoyed: ${summary}
+       Suggest 4 movies/series/games they'd love next. Mix types. Reply ONLY with a JSON array like:
+       [{"title":"...","type":"movie|series|game","year":"...","genre":"...","why":"one line reason"}]`;
+
+  try{
+    const raw = await callGemini(prompt);
+    const recs = JSON.parse(raw);
+    if(!Array.isArray(recs) || !recs.length) throw new Error('empty');
+    recCards.innerHTML = '<div class="rec-cards">' + recs.map(r => {
+      const ico = r.type==='game'?'🎮':r.type==='movie'?'🎬':'📺';
+      const inWL = getWL().some(x=>x.title.toLowerCase()===r.title.toLowerCase());
+      return `<div class="rec-card">
+        <div class="rec-poster-ph">${ico}</div>
+        <div class="rec-info">
+          <div class="rec-title">${r.title}</div>
+          <div class="rec-meta">${[r.genre,r.year].filter(Boolean).join(' · ')}</div>
+          <div class="rec-why">${r.why}</div>
+          ${!inWL?`<button class="rec-add-btn" onclick="addRecToWL('${r.title.replace(/'/g,"\\'")}','${r.type}','${(r.genre||'').replace(/'/g,"\\'")}','${r.year||''}')">+ Add to Watchlist</button>`:'<span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">In watchlist ✓</span>'}
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  } catch(e){
+    recCards.innerHTML = '<div class="recs-loading">Couldn\'t get recommendations — check your Gemini key</div>';
+    console.error(e);
+  }
+}
+
+function addRecToWL(title, type, genre, year){
+  const wl = getWL();
+  if(wl.some(x=>x.title.toLowerCase()===title.toLowerCase())) return;
+  wl.unshift({title, type, genre, year, poster:''});
+  saveWL(wl);
+  renderWL();
+  toast('✅ Added to Watchlist!');
+  // re-render recs to update button
+  const lastMood = document.getElementById('moodInp').value.trim();
+  generateRecs(lastMood);
+}
+
+document.getElementById('recsGenBtn').addEventListener('click', ()=>generateRecs(''));
+document.getElementById('moodToggle').addEventListener('click', ()=>{
+  document.getElementById('moodWrap').classList.toggle('show');
+  document.getElementById('moodInp').focus();
+});
+document.getElementById('moodGo').addEventListener('click', ()=>{
+  const mood = document.getElementById('moodInp').value.trim();
+  if(mood) generateRecs(mood);
+});
+document.getElementById('moodInp').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ const mood=e.target.value.trim(); if(mood) generateRecs(mood); }
+});
+
 // ── EXPOSE TO WINDOW (required for onclick in HTML inside type=module) ──
 window.toggleFav   = toggleFav;
 window.delEntry    = delEntry;
 window.openEdit    = openEdit;
 window.wlLog       = wlLog;
 window.wlDel       = wlDel;
+window.addRecToWL  = addRecToWL;
 </script>
 </body>
 </html>
