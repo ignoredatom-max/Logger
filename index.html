@@ -655,77 +655,9 @@ body.readonly .row{cursor:default}
   white-space:nowrap;
 }
 
-/* ── STATS PARA ───────────────────────────────── */
-.stats-para{
-  padding:8px 16px 9px;
-  border-bottom:1px solid var(--border);
-  font-size:11px;color:var(--text3);
-  line-height:1.5;letter-spacing:0.1px;
-}
-.stats-para b{color:var(--text2);font-weight:600;}
-
-/* ── AI RECS ──────────────────────────────────── */
-.recs-section{padding:12px 14px 6px;}
-.recs-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;
-}
-.recs-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase}
-.recs-mood-btn{
-  font-size:11px;color:var(--blue);background:none;border:none;
-  cursor:pointer;font-family:Inter,sans-serif;font-weight:600;padding:0;
-}
-.mood-input-wrap{
-  margin-bottom:10px;
-  background:var(--bg3);border-radius:10px;
-  padding:8px 10px;border:1px solid var(--border2);
-  display:none;align-items:center;gap:8px;
-}
-.mood-input-wrap.show{display:flex}
-.mood-inp{
-  flex:1;background:none;border:none;outline:none;
-  font-size:12px;color:var(--text);font-family:Inter,sans-serif;
-}
-.mood-inp::placeholder{color:var(--text3)}
-.mood-go{
-  background:var(--blue);color:#fff;border:none;
-  padding:4px 10px;border-radius:7px;font-size:11px;
-  font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
-  white-space:nowrap;
-}
-.rec-cards{display:flex;flex-direction:column;gap:8px;}
-.rec-card{
-  background:var(--bg3);border-radius:12px;
-  padding:11px 12px;border:1px solid var(--border);
-  display:flex;align-items:flex-start;gap:10px;
-}
-.rec-poster{
-  width:34px;height:50px;border-radius:6px;
-  object-fit:cover;flex-shrink:0;background:var(--bg4);
-}
-.rec-poster-ph{
-  width:34px;height:50px;border-radius:6px;
-  background:var(--bg4);flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:16px;
-}
-.rec-info{flex:1;min-width:0}
-.rec-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
-.rec-meta{font-size:10px;color:var(--text3);margin-bottom:4px;}
-.rec-why{font-size:11px;color:var(--text2);line-height:1.4;}
-.rec-add-btn{
-  background:rgba(0,197,102,0.1);border:none;color:var(--green);
-  padding:4px 10px;border-radius:8px;font-size:10px;
-  font-weight:700;cursor:pointer;font-family:Inter,sans-serif;
-  white-space:nowrap;margin-top:6px;display:inline-block;
-}
-.recs-loading{text-align:center;padding:16px;font-size:12px;color:var(--text3);}
-.recs-generate-btn{
-  width:100%;padding:11px;background:transparent;
-  border:1px dashed var(--border2);border-radius:12px;
-  color:var(--text3);font-size:12px;font-weight:600;
-  cursor:pointer;font-family:Inter,sans-serif;
-  display:flex;align-items:center;justify-content:center;gap:6px;
-}
+/* ── COLOUR TOUCHES ──────────────────────────── */
+.header-sub b{font-weight:700;color:var(--text2);}
+.seg-btn.on{color:var(--text);background:var(--bg4);}
 </style>
 </head>
 <body>
@@ -739,7 +671,7 @@ body.readonly .row{cursor:default}
         <span class="logo-ogger">ogger</span>
         <div class="logo-dot"></div>
       </div>
-      <div class="header-sub">Aditya's personal media diary</div>
+      <div class="header-sub" id="headerSub">Aditya's personal media diary</div>
     </div>
     <div style="display:flex;align-items:flex-start;gap:14px">
       <div style="display:flex;gap:12px">
@@ -764,9 +696,6 @@ body.readonly .row{cursor:default}
       <option value="az">A–Z</option>
     </select>
     <button class="add-btn" id="openBtn">+ Add</button>
-  </div>
-  <div class="stats-para" id="statsStrip" style="display:none">
-    <span id="stParaText"></span>
   </div>
   <div class="list" id="list"></div>
 </div>
@@ -795,20 +724,6 @@ body.readonly .row{cursor:default}
     </div>
   </div>
   <div class="wl-list-inner" id="wl-list"></div>
-  <!-- AI RECS -->
-  <div class="recs-section" id="recsSection">
-    <div class="recs-header">
-      <span class="recs-title">✦ For You</span>
-      <button class="recs-mood-btn" id="moodToggle">🎭 Mood search</button>
-    </div>
-    <div class="mood-input-wrap" id="moodWrap">
-      <input class="mood-inp" id="moodInp" placeholder="e.g. something like Severance…">
-      <button class="mood-go" id="moodGo">Go</button>
-    </div>
-    <div id="recCards">
-      <button class="recs-generate-btn" id="recsGenBtn">✦ Generate recommendations</button>
-    </div>
-  </div>
   <div class="list-footer">made with love by Aditya ♥️</div>
 </div>
 
@@ -1390,7 +1305,14 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     const p=btn.dataset.page;
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('on'));
     document.getElementById('page-'+p).classList.add('on');
-    if(p==='favs')renderFavs();if(p==='watchlist')renderWL();
+    if(p==='log'){
+      // reset filter to all so everything shows
+      filter='all';
+      document.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
+      renderLog();
+    }
+    if(p==='favs')renderFavs();
+    if(p==='watchlist')renderWL();
   });
 });
 
@@ -1697,130 +1619,25 @@ setStatusOpts();
 renderLog();
 updateAuthUI();
 
-// ── STATS STRIP ──────────────────────────────────────────
+// ── STATS IN HEADER ──────────────────────────────────────
 function renderStats(){
-  const strip = document.getElementById('statsStrip');
-  if(!DATA.length){ strip.style.display='none'; return; }
-  strip.style.display='block';
+  const el = document.getElementById('headerSub');
+  if(!DATA.length){ el.innerHTML = "Aditya's personal media diary"; return; }
 
   const now = new Date();
-  const thisMonth = DATA.filter(e => {
-    const d = new Date(e.id);
-    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  const thisMonth = DATA.filter(e=>{
+    const d=new Date(e.id);
+    return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
   }).length;
-
   const total = DATA.length;
-
-  // Top genre
   const genres = {};
   DATA.forEach(e=>{ if(e.genre){ e.genre.split(',').forEach(g=>{ const t=g.trim(); if(t) genres[t]=(genres[t]||0)+1; }); }});
   const topGenre = Object.entries(genres).sort((a,b)=>b[1]-a[1])[0];
 
-  // Peak rated
-  const peakCount = DATA.filter(x=>x.rating==='peak').length;
-
-  let sentence = `logged <b>${thisMonth}</b> this month, <b>${total}</b> total.`;
-  if(topGenre) sentence += ` big on <b>${topGenre[0]}</b> lately.`;
-  if(peakCount>0) sentence += ` <b>${peakCount}</b> absolute peak${peakCount===1?'':'s'}.`;
-
-  document.getElementById('stParaText').innerHTML = sentence;
+  let s = `logged <b>${thisMonth}</b> this month, <b>${total}</b> total`;
+  if(topGenre) s += ` · <b>${topGenre[0]}</b>`;
+  el.innerHTML = s;
 }
-
-// ── AI RECOMMENDATIONS (Gemini) ──────────────────────────
-const GEMINI_KEY = 'AIzaSyATeUfWD-dHKP-zy7SvFq8ursgGi7YqmhY';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`;
-
-async function callGemini(prompt){
-  const res = await fetch(GEMINI_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      contents:[{role:'user',parts:[{text: prompt}]}],
-      generationConfig:{temperature:0.8, maxOutputTokens:800}
-    })
-  });
-  if(!res.ok){
-    const err = await res.json();
-    console.error('Gemini error:', err);
-    throw new Error(err?.error?.message||'API error');
-  }
-  const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return text.replace(/```json|```/g,'').trim();
-}
-
-function buildLogSummary(){
-  const top = [...DATA]
-    .sort((a,b)=>RATINGS.indexOf(b.rating)-RATINGS.indexOf(a.rating))
-    .slice(0,15)
-    .map(e=>`${e.title} (${e.type}, ${e.rating}${e.genre?', '+e.genre:''})`)
-    .join('; ');
-  return top;
-}
-
-async function generateRecs(mood=''){
-  const recCards = document.getElementById('recCards');
-  recCards.innerHTML = '<div class="recs-loading">✦ Thinking…</div>';
-
-  const summary = buildLogSummary();
-  if(!summary){ recCards.innerHTML='<div class="recs-loading">Log some entries first!</div>'; return; }
-
-  const prompt = mood
-    ? `Based on someone who enjoyed: ${summary}
-       They want: "${mood}"
-       Suggest 3 movies/series/games they'd love. Reply ONLY with a JSON array like:
-       [{"title":"...","type":"movie|series|game","year":"...","genre":"...","why":"one line reason"}]`
-    : `Based on someone who enjoyed: ${summary}
-       Suggest 4 movies/series/games they'd love next. Mix types. Reply ONLY with a JSON array like:
-       [{"title":"...","type":"movie|series|game","year":"...","genre":"...","why":"one line reason"}]`;
-
-  try{
-    const raw = await callGemini(prompt);
-    const recs = JSON.parse(raw);
-    if(!Array.isArray(recs) || !recs.length) throw new Error('empty');
-    recCards.innerHTML = '<div class="rec-cards">' + recs.map(r => {
-      const ico = r.type==='game'?'🎮':r.type==='movie'?'🎬':'📺';
-      const inWL = getWL().some(x=>x.title.toLowerCase()===r.title.toLowerCase());
-      return `<div class="rec-card">
-        <div class="rec-poster-ph">${ico}</div>
-        <div class="rec-info">
-          <div class="rec-title">${r.title}</div>
-          <div class="rec-meta">${[r.genre,r.year].filter(Boolean).join(' · ')}</div>
-          <div class="rec-why">${r.why}</div>
-          ${!inWL?`<button class="rec-add-btn" onclick="addRecToWL('${r.title.replace(/'/g,"\\'")}','${r.type}','${(r.genre||'').replace(/'/g,"\\'")}','${r.year||''}')">+ Add to Watchlist</button>`:'<span style="font-size:10px;color:var(--text3);display:block;margin-top:6px">In watchlist ✓</span>'}
-        </div>
-      </div>`;
-    }).join('') + '</div>';
-  } catch(e){
-    recCards.innerHTML = `<div class="recs-loading">❌ ${e.message||'Something went wrong'}</div>`;
-    console.error(e);
-  }
-}
-
-function addRecToWL(title, type, genre, year){
-  const wl = getWL();
-  if(wl.some(x=>x.title.toLowerCase()===title.toLowerCase())) return;
-  wl.unshift({title, type, genre, year, poster:''});
-  saveWL(wl);
-  renderWL();
-  toast('✅ Added to Watchlist!');
-  // re-render recs to update button
-  const lastMood = document.getElementById('moodInp').value.trim();
-  generateRecs(lastMood);
-}
-
-document.getElementById('recsGenBtn').addEventListener('click', ()=>generateRecs(''));
-document.getElementById('moodToggle').addEventListener('click', ()=>{
-  document.getElementById('moodWrap').classList.toggle('show');
-  document.getElementById('moodInp').focus();
-});
-document.getElementById('moodGo').addEventListener('click', ()=>{
-  const mood = document.getElementById('moodInp').value.trim();
-  if(mood) generateRecs(mood);
-});
-document.getElementById('moodInp').addEventListener('keydown', e=>{
-  if(e.key==='Enter'){ const mood=e.target.value.trim(); if(mood) generateRecs(mood); }
-});
 
 // ── EXPOSE TO WINDOW (required for onclick in HTML inside type=module) ──
 window.toggleFav   = toggleFav;
@@ -1828,7 +1645,6 @@ window.delEntry    = delEntry;
 window.openEdit    = openEdit;
 window.wlLog       = wlLog;
 window.wlDel       = wlDel;
-window.addRecToWL  = addRecToWL;
 </script>
 </body>
 </html>
