@@ -3,6 +3,31 @@ Personal Media Diary by Aditya
 ————————————————————————————————————————
 
 
+1.7.0
+20 March 2026
+
+  - Added info card — tap any title to see full details
+  - Shows poster, type, year, genre, TMDB/RAWG rating score
+  - Fetches overview, director/cast, runtime, release date,
+    seasons, platforms etc live from API
+  - Info card layout: small poster beside title, details below
+  - Edit Entry button only shows in Log tab, not Favourites or Profile
+  - Favourites and Profile open info card only, no edit dialog
+  - Watchlist: Log it and Remove buttons now side by side,
+    Log it is wider and on the right, Remove on the left
+  - Upcoming countdown cards now open info card on tap
+  - Watchlist type filter (Film/Series/Game) now hidden by default,
+    slides in only when you tap the search bar
+  - Watchlist header gap fixed — title and search bar sit flush
+  - Profile picks now persist across refreshes
+  - Profile picks can be searched from TMDB/RAWG directly —
+    not limited to your logged entries
+  - Seamless loading — app shows cached data instantly on open,
+    syncs with Firestore silently in background
+  - No more loading dialogue on startup
+  - Nav bar redesigned — active tab has a short blue pill bar
+    at the top, label goes blue and bold, cleaner active state
+
 1.6.0
 20 March 2026
 
