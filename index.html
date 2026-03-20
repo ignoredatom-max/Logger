@@ -760,6 +760,50 @@ body.readonly .row{cursor:default}
   cursor:pointer;font-family:Inter,sans-serif;
 }
 
+/* ── TUTORIAL OVERLAY ────────────────────────── */
+.tutorial-overlay{
+  position:fixed;inset:0;z-index:900;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+.tutorial-card{
+  width:100%;max-width:340px;
+  text-align:center;
+}
+.tutorial-logo{
+  display:flex;align-items:baseline;justify-content:center;gap:0;
+  margin-bottom:6px;
+}
+.tutorial-sub{font-size:12px;color:var(--text3);margin-bottom:36px;}
+.tutorial-steps{display:flex;flex-direction:column;gap:16px;margin-bottom:36px;text-align:left;}
+.tutorial-step{display:flex;align-items:flex-start;gap:14px;}
+.tutorial-step-num{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--blue);color:#fff;
+  font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  margin-top:1px;
+}
+.tutorial-step-text{font-size:14px;color:var(--text2);line-height:1.5;}
+.tutorial-step-text b{color:var(--text);font-weight:700;}
+.tutorial-signin-btn{
+  width:100%;padding:15px;
+  background:var(--blue);color:#fff;border:none;
+  border-radius:16px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:Inter,sans-serif;
+}
+
+/* ── PROFILE SHARE BTN ───────────────────────── */
+.profile-share-btn{
+  margin-top:10px;padding:8px 18px;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:20px;color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:Inter,sans-serif;
+  transition:background 0.15s;
+}
+.profile-share-btn:active{background:var(--bg4);}
+
 /* ── SEASON PICKER ───────────────────────────── */
 .season-picker{display:flex;flex-wrap:wrap;gap:7px;padding:4px 0;}
 .season-btn{
@@ -1062,6 +1106,7 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
     <div class="profile-info">
       <div class="profile-name" id="profileName">Aditya</div>
       <div class="profile-sub" id="profileSub">—</div>
+      <button class="profile-share-btn" id="profileShareBtn" style="display:none">🔗 Copy my link</button>
     </div>
   </div>
 
@@ -1120,10 +1165,35 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
   </div>
 </div>
 
+<!-- TUTORIAL OVERLAY -->
+<div class="tutorial-overlay" id="tutorialOverlay" style="display:none">
+  <div class="tutorial-card">
+    <div class="tutorial-logo">
+      <span class="logo-l">L</span><span class="logo-ogger">ogger</span><div class="logo-dot"></div>
+    </div>
+    <div class="tutorial-sub">Your personal media diary</div>
+    <div class="tutorial-steps">
+      <div class="tutorial-step">
+        <div class="tutorial-step-num">1</div>
+        <div class="tutorial-step-text">Tap <b>⚙︎</b> top right and sign in with Google</div>
+      </div>
+      <div class="tutorial-step">
+        <div class="tutorial-step-num">2</div>
+        <div class="tutorial-step-text">Tap <b>+ Add</b> in the Log tab to log your first film, series or game</div>
+      </div>
+      <div class="tutorial-step">
+        <div class="tutorial-step-num">3</div>
+        <div class="tutorial-step-text">Go to <b>Profile</b> tab and copy your share link for Instagram</div>
+      </div>
+    </div>
+    <button class="tutorial-signin-btn" id="tutorialSignInBtn">Sign in with Google</button>
+  </div>
+</div>
+
 <!-- READ-ONLY BANNER (shown to visitors not signed in) -->
 <div class="readonly-banner" id="readonlyBanner" style="display:none">
-  <span>👀 Viewing Aditya's diary — read only</span>
-  <button onclick="document.getElementById('authBtn').click();closeSheet&&closeSheet()">Sign in to edit</button>
+  <span id="readonlyBannerText">👀 Viewing this diary — read only</span>
+  <button onclick="document.getElementById('authBtn').click();closeSheet&&closeSheet()">Sign in to use yours</button>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1180,6 +1250,24 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
     <div class="sheet-info"><div class="sheet-label">Restore from Backup</div><div class="sheet-sub">Merge entries from a JSON file</div></div>
     <div class="sheet-arrow">›</div>
   </div>
+  <a href="https://www.themoviedb.org" target="_blank" style="text-decoration:none">
+    <div class="sheet-item">
+      <div class="sheet-ico">🎬</div>
+      <div class="sheet-info">
+        <div class="sheet-label">Movie & Series data by TMDB</div>
+        <div class="sheet-sub">themoviedb.org — tap to visit</div>
+      </div>
+    </div>
+  </a>
+  <a href="https://rawg.io" target="_blank" style="text-decoration:none">
+    <div class="sheet-item" style="border-bottom:none">
+      <div class="sheet-ico">🎮</div>
+      <div class="sheet-info">
+        <div class="sheet-label">Game data by RAWG</div>
+        <div class="sheet-sub">rawg.io — tap to visit</div>
+      </div>
+    </div>
+  </a>
   <input type="file" id="fileInput" accept=".json" style="display:none">
 </div>
 
@@ -1205,7 +1293,7 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
           <div class="spin" id="spin"></div>
           <div class="dropdown" id="dropdown"></div>
         </div>
-        <div class="tmdb-attr" id="tmdbAttr">Movie &amp; series data from TMDB</div>
+        <div class="tmdb-attr" id="tmdbAttr">Movie &amp; series data from <a href="https://www.themoviedb.org" target="_blank" style="color:var(--teal);text-decoration:none">TMDB</a></div>
       </div>
       <div class="dup-banner" id="dupBanner">⚠️ Already in your log — saving will tag this as Rewatched.</div>
       <div class="sel-preview" id="selPreview">
@@ -1381,13 +1469,42 @@ function updateAuthUI(){
   }
 }
 
-// Your Firebase UID — visitors load YOUR data when not signed in
+// Your Firebase UID — used as default for ?u= links
 const OWNER_UID = 'kFMRmHi4hzakOaQFx7ccanUsIbl1';
+
+// Check URL for ?u= param
+const _urlUID = new URLSearchParams(window.location.search).get('u');
+const PUBLIC_UID = _urlUID || null; // null = no public view, show tutorial
 
 function setReadOnly(isReadOnly){
   document.body.classList.toggle('readonly', isReadOnly);
   document.getElementById('readonlyBanner').style.display = isReadOnly ? 'flex' : 'none';
 }
+
+onAuthStateChanged(auth, async user=>{
+  currentUser = user;
+  updateAuthUI();
+  if(user){
+    hideTutorial();
+    setReadOnly(false);
+    await loadUserProfile();
+    await fsLoad();
+  } else {
+    updateHeaderAvatar('', 'A');
+    if(PUBLIC_UID){
+      // Someone shared their ?u= link — show their public diary
+      hideTutorial();
+      setReadOnly(true);
+      await fsLoadPublic(PUBLIC_UID);
+    } else {
+      // No ?u= — show tutorial, empty app
+      setReadOnly(false);
+      DATA = [];
+      renderLog();
+      showTutorial();
+    }
+  }
+});
 
 document.getElementById('authBtn').addEventListener('click', async()=>{
   closeSheet();
@@ -1401,30 +1518,12 @@ document.getElementById('authBtn').addEventListener('click', async()=>{
   }
 });
 
-onAuthStateChanged(auth, async user=>{
-  currentUser = user;
-  updateAuthUI();
-  if(user){
-    setReadOnly(false);
-    await loadUserProfile();
-    await fsLoad();
-  } else {
-    updateHeaderAvatar('', 'A');
-    setReadOnly(true);
-    await fsLoadPublic();
-  }
-});
-
-// Load owner's entries publicly (no auth needed — Firestore rules allow public read)
-async function fsLoadPublic(){
-  // Show cache instantly if available
+// Load public entries for a given UID
+async function fsLoadPublic(uid){
   const cached = cacheRead();
-  if(cached && cached.length){
-    DATA = cached;
-    renderLog(); renderFavs();
-  }
+  if(cached && cached.length){ DATA = cached; renderLog(); renderFavs(); }
   try{
-    const snap = await getDocs(collection(db_fs,`users/${OWNER_UID}/entries`));
+    const snap = await getDocs(collection(db_fs,`users/${uid}/entries`));
     DATA = snap.docs.map(d => d.data());
     cacheWrite(DATA);
     renderLog(); renderFavs();
@@ -2187,6 +2286,7 @@ function renderProfile(){
 
   document.getElementById('profileName').textContent = name;
   updateHeaderAvatar(pfp, name);
+  updateProfileShareBtn();
 
   const total = DATA.length;
   const peaks = DATA.filter(x=>x.rating==='peak').length;
@@ -2604,6 +2704,38 @@ document.getElementById('infoOverlay').addEventListener('click', e=>{
 function profileCardClick(id){
   const entry = DATA.find(x=>x.id===id) || getPickExtras().find(x=>x.id===id);
   if(entry) openInfo(id,'profile',null);
+}
+
+// ── TUTORIAL ─────────────────────────────────────────────
+function showTutorial(){
+  document.getElementById('tutorialOverlay').style.display='flex';
+}
+function hideTutorial(){
+  document.getElementById('tutorialOverlay').style.display='none';
+}
+document.getElementById('tutorialSignInBtn').addEventListener('click', async()=>{
+  try{
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch(e){ toast('❌ Sign-in failed: '+e.message); }
+});
+
+// ── PROFILE SHARE LINK ────────────────────────────────────
+document.getElementById('profileShareBtn').addEventListener('click',()=>{
+  if(!currentUser){ toast('Sign in first'); return; }
+  const base = window.location.origin + window.location.pathname;
+  const link = `${base}?u=${currentUser.uid}`;
+  navigator.clipboard.writeText(link).then(()=>{
+    toast('✅ Link copied! Share it on Instagram');
+  }).catch(()=>{
+    // Fallback for browsers that block clipboard
+    prompt('Copy your share link:', link);
+  });
+});
+
+// Show share button only when signed in
+function updateProfileShareBtn(){
+  const btn = document.getElementById('profileShareBtn');
+  if(btn) btn.style.display = currentUser ? 'block' : 'none';
 }
 
 // ── EXPOSE TO WINDOW ──────────────────────────────────────
