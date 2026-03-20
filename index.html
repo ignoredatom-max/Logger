@@ -547,6 +547,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 /* ── GLOBAL ANIMATIONS ───────────────────────── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:0.7}}
 @keyframes popIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:none}}
 
 /* Page transition */
@@ -1193,7 +1194,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       </div>
     </div>
     <button class="tutorial-signin-btn" id="tutorialSignInBtn">Sign in with Google</button>
-    <div class="tutorial-footer">Want to see Aditya's log? <a href="?u=kFMRmHi4hzakOaQFx7ccanUsIbl1" style="color:var(--blue);text-decoration:none">Tap here →</a></div>
+    <div class="tutorial-footer">made with ♥️ by Aditya</div>
   </div>
 </div>
 
@@ -1528,14 +1529,32 @@ document.getElementById('authBtn').addEventListener('click', async()=>{
 // Load public entries for a given UID
 async function fsLoadPublic(uid){
   const cached = cacheRead();
-  if(cached && cached.length){ DATA = cached; renderLog(); renderFavs(); }
+  if(cached && cached.length){
+    DATA = cached; renderLog(); renderFavs();
+  } else {
+    // Show loading skeleton while Firestore fetches
+    document.getElementById('list').innerHTML = `
+      <div style="padding:40px 20px;text-align:center">
+        <div style="font-size:13px;color:var(--text3);margin-bottom:8px;">Loading diary…</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+          ${[1,2,3,4].map(()=>`
+            <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;opacity:0.4;animation:pulse 1.4s ease infinite">
+              <div style="width:36px;height:54px;border-radius:6px;background:var(--bg3);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div style="height:13px;background:var(--bg3);border-radius:6px;margin-bottom:8px;width:60%"></div>
+                <div style="height:10px;background:var(--bg3);border-radius:6px;width:40%"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }
   await loadPublicProfile(uid);
   try{
     const snap = await getDocs(collection(db_fs,`users/${uid}/entries`));
     DATA = snap.docs.map(d => d.data());
     cacheWrite(DATA);
     renderLog(); renderFavs();
-    // Re-render profile if currently on that tab
     if(document.getElementById('page-profile').classList.contains('on')) renderProfile();
   } catch(e){
     if(!cached){ DATA = []; renderLog(); }
