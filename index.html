@@ -760,6 +760,15 @@ body.readonly .row{cursor:default}
   cursor:pointer;font-family:Inter,sans-serif;
 }
 
+/* ── SEASON PICKER ───────────────────────────── */
+.season-picker{display:flex;flex-wrap:wrap;gap:7px;padding:4px 0;}
+.season-btn{
+  padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;
+  border:1px solid var(--border2);background:var(--bg3);color:var(--text2);
+  cursor:pointer;font-family:Inter,sans-serif;transition:all 0.15s;
+}
+.season-btn.on{background:var(--teal);color:#000;border-color:var(--teal);}
+
 .header-sub b{font-weight:700;color:var(--text2);}
 .seg-btn.on{color:var(--text);background:var(--bg4);}
 
@@ -1208,6 +1217,11 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
         <span class="lbl">Status</span>
         <select class="inp" id="fStatus"></select>
       </div>
+      <!-- SEASON PICKER — series only -->
+      <div class="field" id="seasonField" style="display:none">
+        <span class="lbl">Seasons watched</span>
+        <div class="season-picker" id="seasonPicker"></div>
+      </div>
       <div class="field">
         <span class="lbl">Rating</span>
         <div class="rating-slider-wrap">
@@ -1440,6 +1454,7 @@ function todayVal(){ return new Date().toISOString().slice(0,10); }
 let DATA=[],filter='all',sortBy='new';
 let editId=null,mType='movie',mRating=2,mPoster='',mTitle='',mFav=false,mGenre='',mYear='';
 let searchTmr=null,dropData=[];
+let mSeasons=0, mLastSeason=0; // series season state
 
 function statusOpts(t){
   if(t==='game') return [{v:'done',l:'🎮 Completed'},{v:'playing',l:'⚡ Playing'},{v:'want',l:'🔖 Want to'},{v:'dropped',l:'❌ Dropped'}];
@@ -1448,13 +1463,16 @@ function statusOpts(t){
 }
 const pillCls={done:'pill-done',playing:'pill-playing',watching:'pill-watching',want:'pill-want',dropped:'pill-dropped',rewatched:'pill-rewatched'};
 const pillLbl={playing:'Playing',watching:'Watching',want:'Want to',dropped:'Dropped',rewatched:'Rewatched'};
-function getDoneLabel(type){
+function getDoneLabel(type){ 
   if(type==='game') return 'Completed';
   if(type==='series') return 'Finished';
   return 'Watched';
 }
-function getPillLabel(sKey, type){
-  if(sKey==='done') return getDoneLabel(type);
+function getPillLabel(sKey, type, entry){
+  if(sKey==='done'){
+    if(type==='series' && entry?.lastSeason>0) return `Completed S${entry.lastSeason}`;
+    return getDoneLabel(type);
+  }
   return pillLbl[sKey]||'Done';
 }
 function getTypeIcon(type){
@@ -1523,7 +1541,7 @@ function renderRow(e,i){
   const rKey=RATINGS.includes(e.rating)?e.rating:'decent';
   const rBadge=`<span class="rating-badge ${RATING_CLASS[rKey]}">${RATING_LABELS[rKey]}</span>`;
   const sKey=e.rewatched?'rewatched':(e.status||'done');
-  const sPill=`<span class="pill ${pillCls[sKey]||'pill-done'}">${getPillLabel(sKey,e.type)}</span>`;
+  const sPill=`<span class="pill ${pillCls[sKey]||'pill-done'}">${getPillLabel(sKey,e.type,e)}</span>`;
   const typeIco=`<span class="row-type-ico">${icon}</span>`;
   const noteIco=e.notes?`<span class="note-icon">ᯓ</span>`:'';
   const fav=`<button class="row-fav-inline ${e.fav?'on':''}" onclick="toggleFav(${e.id},event)">${e.fav?'❤️':'🤍'}</button>`;
@@ -1797,6 +1815,11 @@ function checkDup(title){
   if(!title||editId)return;
   const ex=DATA.find(x=>x.title.toLowerCase()===title.toLowerCase()&&x.type===mType);
   document.getElementById('dupBanner').classList.toggle('show',!!ex);
+  // Pre-fill season from last entry of same series
+  if(ex && mType==='series' && ex.lastSeason>0){
+    mLastSeason = ex.lastSeason;
+    if(mSeasons>0) renderSeasonPicker(mLastSeason);
+  }
 }
 
 searchInp.addEventListener('input',()=>{
@@ -1826,6 +1849,7 @@ function pickResult(r){
   closeDD();mTitle=r.title;mPoster=r.poster||'';mGenre=r.genre||'';mYear=r.year||'';
   searchInp.value=r.title;checkDup(r.title);
   showPreview(mPoster,mTitle,[r.year,r.genre].filter(Boolean).join(' · '));
+  if(mType==='series'){ mLastSeason=0; fetchAndRenderSeasons(r.title,0); }
 }
 function showPreview(poster,title,sub){
   const img=document.getElementById('selImg');
@@ -1849,6 +1873,7 @@ document.querySelectorAll('.type-chip').forEach(chip=>{
     const q=searchInp.value.trim();
     if(q.length>=2){mTitle='';mPoster='';mGenre='';mYear='';hidePreview();runSearch(q);}
     checkDup(searchInp.value.trim());
+    if(mType==='series'&&mTitle){ mLastSeason=0; fetchAndRenderSeasons(mTitle,0); }
   });
 });
 
@@ -1856,6 +1881,49 @@ function setStatusOpts(val){
   const sel=document.getElementById('fStatus');
   sel.innerHTML=statusOpts(mType).map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
   if(val)sel.value=val;
+  // Show/hide season picker
+  updateSeasonField();
+}
+
+function updateSeasonField(){
+  const field = document.getElementById('seasonField');
+  if(mType==='series'){ field.style.display='block'; }
+  else { field.style.display='none'; mSeasons=0; mLastSeason=0; }
+}
+
+async function fetchAndRenderSeasons(title, existingLastSeason){
+  if(mType!=='series'||!title) return;
+  try{
+    const r = await fetch(`https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(title)}&api_key=${TMDB}`);
+    const d = await r.json();
+    const first = d.results?.[0];
+    if(!first) return;
+    const detail = await fetch(`https://api.themoviedb.org/3/tv/${first.id}?api_key=${TMDB}`);
+    const tv = await detail.json();
+    // Filter out specials (season 0)
+    mSeasons = (tv.seasons||[]).filter(s=>s.season_number>0).length;
+    if(mSeasons>0) renderSeasonPicker(existingLastSeason||0);
+  }catch(e){}
+}
+
+function renderSeasonPicker(selectedUpTo){
+  mLastSeason = selectedUpTo;
+  const picker = document.getElementById('seasonPicker');
+  if(!mSeasons){ picker.innerHTML='<span style="font-size:11px;color:var(--text3)">Fetching seasons…</span>'; return; }
+  let html='';
+  for(let i=1;i<=mSeasons;i++){
+    html+=`<button class="season-btn${i<=mLastSeason?' on':''}" data-s="${i}">S${i}</button>`;
+  }
+  picker.innerHTML=html;
+  picker.querySelectorAll('.season-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const s=+btn.dataset.s;
+      // Selecting S3 means S1+S2+S3 all on, clicking active last one deselects
+      if(s===mLastSeason){ mLastSeason=s-1; }
+      else { mLastSeason=s; }
+      renderSeasonPicker(mLastSeason);
+    });
+  });
 }
 
 // Slider
@@ -1892,6 +1960,12 @@ function openModal(entry,prefill){
   searchInp.value=mTitle;
   document.getElementById('fNotes').value=entry?entry.notes:'';
   setStatusOpts(entry?entry.status:null);
+  // Season picker
+  mSeasons=0; mLastSeason=entry?.lastSeason||0;
+  if(mType==='series' && mTitle){
+    document.getElementById('seasonPicker').innerHTML='<span style="font-size:11px;color:var(--text3)">Fetching seasons…</span>';
+    fetchAndRenderSeasons(mTitle, mLastSeason);
+  }
   updateSlider(mRating);
   document.getElementById('favBtn').classList.toggle('on',mFav);
   document.getElementById('dupBanner').classList.remove('show');
@@ -1919,7 +1993,8 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
     id:entryId,type:mType,title,poster:mPoster,genre:mGenre,year:mYear,
     status:document.getElementById('fStatus').value,
     rating:ratingKey,fav:mFav,rewatched:!!isDup,
-    notes:document.getElementById('fNotes').value.trim()
+    notes:document.getElementById('fNotes').value.trim(),
+    lastSeason:mType==='series'?mLastSeason:0
   };
   await fsSave(entry);
   if(editId) DATA=DATA.map(x=>x.id===editId?entry:x); else DATA.unshift(entry);
