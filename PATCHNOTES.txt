@@ -3,6 +3,27 @@ Personal Media Diary by Aditya
 ————————————————————————————————————————
 
 
+1.6.0
+20 March 2026
+
+  - Added Profile tab (4th nav tab)
+  - Profile shows pfp, name, top picks, recent activity and stats
+  - Upload your own pfp from phone — shows in nav tab and profile
+  - Each Google account gets their own profile when signed in
+  - Visitors see Aditya's profile by default
+  - Top Picks — 6 slots (3x2 grid), search any film/series/game from TMDB/RAWG to add, not limited to logged entries
+  - Recent Activity — last 8 entries, horizontal scroll
+  - Stats — films, series, games, favs, peaks, top genre
+  - Section headers match month header style from log page
+  - Added Upcoming grid to Watchlist — horizontal scroll, single row
+  - Unreleased items show only in upcoming, not duplicated in watchlist list
+  - When release date passes, item moves automatically to watchlist list
+  - Countdown shows actual days remaining, updates daily
+  - Countdown number is large, label in type colour, title fixed 2-line height so all cards align
+  - Removed date picker from add/edit modal — auto-sets to today
+  - Release dates pulled from TMDB and RAWG when adding to watchlist
+  - Settings gear stays in header, nav profile tab shows your pfp in a circle
+
 1.5.0
 16 March 2026
 
