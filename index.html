@@ -2323,19 +2323,16 @@ async function loadUserProfile(){
 // Load profile data for a public UID (visitor viewing someone's ?u= link)
 async function loadPublicProfile(uid){
   try{
-    console.log('loadPublicProfile called for uid:', uid);
     const snap = await getDoc(doc(db_fs,`users/${uid}/meta/profile`));
-    console.log('profile doc exists:', snap.exists());
     if(snap.exists()){
       const d = snap.data();
-      console.log('profile data:', JSON.stringify(d).slice(0,200));
       const key = (k)=>`lgr_${uid}_${k}`;
       if(d.pfp)  localStorage.setItem(key('pfp'), d.pfp);
       if(d.picks) localStorage.setItem(key('picks'), JSON.stringify(d.picks));
       if(d.displayName) localStorage.setItem(key('name'), d.displayName);
       if(d.extras) localStorage.setItem(key('extras'), JSON.stringify(d.extras));
     }
-  }catch(e){ console.error('loadPublicProfile error:', e); }
+  }catch(e){}
 }
 
 function renderProfile(){
