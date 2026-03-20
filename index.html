@@ -2252,10 +2252,19 @@ function profileKey(k){
   const uid = currentUser ? currentUser.uid : (PUBLIC_UID || OWNER_UID);
   return `lgr_${uid}_${k}`;
 }
-function getPicks(){ return JSON.parse(localStorage.getItem(profileKey('picks'))||'[]'); }
-function savePicks(p){
-  localStorage.setItem(profileKey('picks'), JSON.stringify(p));
-  if(currentUser) setDoc(doc(db_fs,`users/${currentUser.uid}/meta/profile`),{picks:p},{merge:true});
+function getPicks(){ 
+  // Returns array of full entry objects (new format) or IDs (legacy)
+  const raw = JSON.parse(localStorage.getItem(profileKey('picks'))||'[]');
+  // Detect if new format (objects) or old format (numbers/IDs)
+  if(raw.length && typeof raw[0] === 'object') return raw;
+  // Legacy: resolve IDs to entries
+  return raw.map(id=>DATA.find(x=>x.id===id)||getPickExtras().find(x=>x.id===id)).filter(Boolean);
+}
+function savePicks(entries){
+  // Always save as full entry objects
+  const toSave = entries.map(e=> typeof e==='object' ? e : DATA.find(x=>x.id===e)||getPickExtras().find(x=>x.id===e)).filter(Boolean);
+  localStorage.setItem(profileKey('picks'), JSON.stringify(toSave));
+  if(currentUser) setDoc(doc(db_fs,`users/${currentUser.uid}/meta/profile`),{picks:toSave},{merge:true});
 }
 function getPfp(){ return localStorage.getItem(profileKey('pfp'))||''; }
 function savePfp(url){
@@ -2390,20 +2399,15 @@ function profileCard(e, removable){
 }
 
 function renderTopPicks(){
-  const picks = getPicks();
-  const pickEntries = picks.map(id=>{
-    return DATA.find(x=>x.id===id) || getPickExtras().find(x=>x.id===id);
-  }).filter(Boolean);
+  const pickEntries = getPicks(); // now returns full entry objects
   const grid = document.getElementById('topPicksGrid');
   const editBtn = document.getElementById('editPicksBtn');
 
-  // Only show edit button to owner
   editBtn.style.display = currentUser ? 'block' : 'none';
   editBtn.textContent = editingPicks ? 'Done' : 'Edit';
 
   let html = pickEntries.map(e=>profileCard(e, editingPicks)).join('');
 
-  // Show add slot if editing and under 4
   if(editingPicks && pickEntries.length < 6){
     html += `<div class="profile-card-add" onclick="openPickSelector()">
       <div class="profile-card-add-ico">＋</div>
@@ -2419,7 +2423,7 @@ function renderTopPicks(){
 
 function removePick(id, ev){
   ev.stopPropagation();
-  const picks = getPicks().filter(x=>x!==id);
+  const picks = getPicks().filter(x=>x.id!==id);
   savePicks(picks);
   renderTopPicks();
 }
@@ -2501,23 +2505,17 @@ async function runPickSearch(q, type){
 function addPickFromSearch(r){
   try{
     const picks = getPicks();
-    const resolved = picks.map(id=>DATA.find(x=>x.id===id)||getPickExtras().find(x=>x.id===id)).filter(Boolean);
-    if(resolved.length>=6){ toast('Already have 6 picks'); return; }
-    // Clean stale IDs before adding
-    const cleanPicks = picks.filter(id=>DATA.find(x=>x.id===id)||getPickExtras().find(x=>x.id===id));
+    if(picks.length>=6){ toast('Already have 6 picks'); return; }
     const existing = DATA.find(x=>x.title.toLowerCase()===r.title.toLowerCase()&&x.type===r.type);
     const pickEntry = existing || { id: Date.now(), title:r.title, poster:r.poster||'', year:r.year||'', genre:r.genre||'', type:r.type, rating:'decent', fav:false, notes:'' };
-    if(!existing){
-      const extras = getPickExtras().filter(x=>x.title!==pickEntry.title);
-      extras.push(pickEntry);
-      savePickExtras(extras);
+    if(!picks.find(x=>x.id===pickEntry.id)){
+      picks.push(pickEntry);
+      savePicks(picks);
     }
-    if(!cleanPicks.includes(pickEntry.id)) cleanPicks.push(pickEntry.id);
-    savePicks(cleanPicks);
     document.getElementById('pickSheet')?.remove();
     renderTopPicks();
     toast('✅ Added to Top Picks');
-  } catch(e){ toast('Something went wrong'); }
+  } catch(e){ toast('Something went wrong'); console.error(e); }
 }
 
 document.getElementById('editPicksBtn').addEventListener('click',()=>{
@@ -2753,7 +2751,7 @@ document.getElementById('infoOverlay').addEventListener('click', e=>{
 
 // Profile card click opens info
 function profileCardClick(id){
-  const entry = DATA.find(x=>x.id===id) || getPickExtras().find(x=>x.id===id);
+  const entry = DATA.find(x=>x.id===id) || getPicks().find(x=>x.id===id);
   if(entry) openInfo(id,'profile',null);
 }
 
