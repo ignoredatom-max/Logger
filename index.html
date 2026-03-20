@@ -42,28 +42,36 @@ body::before{content:none}
 /* ── NAV ─────────────────────────────────────── */
 .nav{
   position:fixed;bottom:0;left:0;right:0;z-index:100;
-  background:rgba(26,26,26,0.88);
-  border-top:1px solid var(--border2);
+  background:rgba(22,22,22,0.95);
+  border-top:1px solid var(--border);
   display:flex;
-  padding-bottom:env(safe-area-inset-bottom);
-  backdrop-filter:blur(24px) saturate(1.8);
-  -webkit-backdrop-filter:blur(24px) saturate(1.8);
+  padding:0 0 env(safe-area-inset-bottom) 0;
+  backdrop-filter:blur(30px) saturate(2);
+  -webkit-backdrop-filter:blur(30px) saturate(2);
 }
 .nav-btn{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:10px 0 8px;gap:3px;border:none;background:transparent;
+  padding:8px 0 6px;gap:3px;border:none;background:transparent;
   color:var(--text3);cursor:pointer;font-family:'Inter',sans-serif;
-  font-size:10px;font-weight:500;letter-spacing:0.3px;
+  font-size:10px;font-weight:500;
   transition:color 0.2s;position:relative;
 }
-.nav-btn .nav-ico{font-size:21px;line-height:1;transition:transform 0.2s}
-.nav-btn.on{color:var(--blue)}
-.nav-btn.on .nav-ico{transform:translateY(-1px)}
-/* Active ink dot */
-.nav-btn.on::after{
-  content:'';position:absolute;top:6px;left:50%;transform:translateX(-50%);
-  width:4px;height:4px;border-radius:50%;background:var(--blue);
+.nav-ico-wrap{
+  display:flex;align-items:center;justify-content:center;
+  height:26px;
+  transition:transform 0.2s cubic-bezier(.32,1,.23,1);
 }
+.nav-btn .nav-ico{font-size:20px;line-height:1;}
+.nav-btn .nav-lbl{font-size:10px;font-weight:500;transition:color 0.15s,font-weight 0.15s;}
+.nav-btn.on .nav-ico-wrap{transform:translateY(-1px);}
+.nav-btn.on .nav-lbl{color:var(--blue);font-weight:700;}
+.nav-btn.on::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:28px;height:3px;border-radius:0 0 3px 3px;
+  background:var(--blue);
+}
+.nav-btn:active .nav-ico-wrap{transform:scale(0.88);}
+.nav-btn.on::after{display:none;}
 
 /* ── PAGES ───────────────────────────────────── */
 .page{display:none;padding-bottom:90px;min-height:100vh}
@@ -206,6 +214,8 @@ body::before{content:none}
   white-space:nowrap;
   line-height:1.2;
   display:inline;
+  cursor:pointer;
+  text-decoration:none;
 }
 .row-year{font-size:13px;color:var(--text3);font-weight:400;margin-left:6px}
 .row-meta{display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap}
@@ -421,6 +431,8 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 
 /* ── WATCHLIST ────────────────────────────────── */
 .wl-search-wrap{padding:10px 16px 0;border-bottom:1px solid var(--border)}
+.wl-type-bar{display:flex;gap:7px;margin-bottom:10px;overflow:hidden;max-height:0;opacity:0;transition:max-height 0.25s ease,opacity 0.2s ease,margin 0.25s ease;margin-bottom:0;}
+.wl-type-bar.show{max-height:48px;opacity:1;margin-bottom:10px;}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px}
 .wl-tsel{
   flex:1;padding:9px 4px;background:var(--bg2);border:1.5px solid transparent;
@@ -474,7 +486,8 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .wl-thumb{width:44px;height:64px;object-fit:cover;border-radius:7px;background:var(--bg3);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.4)}
 .wl-ph{width:44px;height:64px;background:var(--bg3);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .wl-info{flex:1;min-width:0}
-.wl-title{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px}
+.wl-title{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px;cursor:pointer;}
+.wl-title:hover{color:var(--text);}
 .wl-sub{font-size:11px;color:var(--text3);margin-top:3px}
 .wl-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
 .wl-log-btn{
@@ -663,7 +676,91 @@ body.readonly .row{cursor:default}
   white-space:nowrap;
 }
 
-/* ── COLOUR TOUCHES ──────────────────────────── */
+/* ── INFO CARD OVERLAY ───────────────────────── */
+.info-overlay{
+  position:fixed;inset:0;z-index:800;
+  background:rgba(0,0,0,0.75);
+  display:none;align-items:flex-end;
+  backdrop-filter:blur(4px);
+}
+.info-overlay.show{display:flex;}
+.info-sheet{
+  width:100%;max-height:90vh;
+  background:var(--bg2);
+  border-radius:22px 22px 0 0;
+  overflow-y:auto;scrollbar-width:none;
+  animation:slideUp 0.3s cubic-bezier(.32,1,.23,1);
+}
+.info-sheet::-webkit-scrollbar{display:none}
+.info-poster-wrap{
+  position:relative;width:100%;height:220px;overflow:hidden;
+  background:var(--bg3);
+}
+.info-poster{width:100%;height:100%;object-fit:cover;display:block;}
+.info-poster-gradient{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%);
+}
+.info-poster-ph{
+  width:100%;height:100%;display:flex;align-items:center;
+  justify-content:center;font-size:64px;
+}
+.info-close{
+  position:absolute;top:14px;right:14px;
+  background:rgba(0,0,0,0.5);border:none;color:#fff;
+  width:32px;height:32px;border-radius:50%;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);
+}
+.info-type-bar{
+  position:absolute;top:0;right:0;bottom:0;width:4px;
+}
+.info-sheet.movie .info-type-bar{background:var(--red);}
+.info-sheet.series .info-type-bar{background:var(--teal);}
+.info-sheet.game .info-type-bar{background:var(--green);}
+.info-body{padding:18px 18px 32px;}
+.info-meta-row{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:8px;flex-wrap:wrap;
+}
+.info-type-pill{
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.info-sheet.movie .info-type-pill{background:rgba(255,69,58,0.15);color:var(--red);}
+.info-sheet.series .info-type-pill{background:rgba(0,180,216,0.15);color:var(--teal);}
+.info-sheet.game .info-type-pill{background:rgba(0,197,102,0.15);color:var(--green);}
+.info-year{font-size:11px;color:var(--text3);}
+.info-title{font-size:22px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:6px;}
+.info-genre{font-size:12px;color:var(--text3);margin-bottom:14px;}
+.info-rating-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.info-score{
+  font-size:13px;font-weight:700;padding:4px 10px;
+  border-radius:8px;background:var(--bg3);color:var(--text2);
+}
+.info-overview{
+  font-size:13px;color:var(--text2);line-height:1.6;
+  margin-bottom:18px;
+}
+.info-details{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-bottom:20px;
+}
+.info-detail-item{}
+.info-detail-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;}
+.info-detail-val{font-size:12px;color:var(--text2);font-weight:600;}
+.info-actions{display:flex;gap:10px;flex-direction:row;}
+.info-edit-btn{
+  flex:1;padding:13px;background:var(--blue);color:#fff;
+  border:none;border-radius:14px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:Inter,sans-serif;
+}
+.info-wl-btn{
+  flex:1;padding:13px;background:var(--bg3);color:var(--text2);
+  border:1px solid var(--border2);border-radius:14px;font-size:14px;font-weight:600;
+  cursor:pointer;font-family:Inter,sans-serif;
+}
+
 .header-sub b{font-weight:700;color:var(--text2);}
 .seg-btn.on{color:var(--text);background:var(--bg4);}
 
@@ -978,6 +1075,31 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
   <div class="list-footer">made with love by Aditya ♥️</div>
 </div>
 
+<!-- INFO CARD -->
+<div class="info-overlay" id="infoOverlay">
+  <div class="info-sheet" id="infoSheet">
+    <div class="info-poster-wrap">
+      <img class="info-poster" id="infoPoster" src="" alt="">
+      <div class="info-poster-ph" id="infoPosterPh" style="display:none"></div>
+      <div class="info-poster-gradient"></div>
+      <div class="info-type-bar"></div>
+      <button class="info-close" id="infoClose">✕</button>
+    </div>
+    <div class="info-body">
+      <div class="info-meta-row">
+        <span class="info-type-pill" id="infoTypePill"></span>
+        <span class="info-year" id="infoYear"></span>
+        <span class="info-score" id="infoScore" style="display:none"></span>
+      </div>
+      <div class="info-title" id="infoTitle"></div>
+      <div class="info-genre" id="infoGenre"></div>
+      <div class="info-overview" id="infoOverview" style="display:none"></div>
+      <div class="info-details" id="infoDetails"></div>
+      <div class="info-actions" id="infoActions"></div>
+    </div>
+  </div>
+</div>
+
 <!-- READ-ONLY BANNER (shown to visitors not signed in) -->
 <div class="readonly-banner" id="readonlyBanner" style="display:none">
   <span>👀 Viewing Aditya's diary — read only</span>
@@ -986,15 +1108,26 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
 
 <!-- BOTTOM NAV -->
 <nav class="nav">
-  <button class="nav-btn on" data-page="log"><span class="nav-ico">📋</span>Log</button>
-  <button class="nav-btn" data-page="watchlist"><span class="nav-ico">🔖</span>Watchlist</button>
-  <button class="nav-btn" data-page="favs"><span class="nav-ico">❤️</span>Favourites</button>
+  <button class="nav-btn on" data-page="log">
+    <div class="nav-ico-wrap"><span class="nav-ico">📋</span></div>
+    <span class="nav-lbl">Log</span>
+  </button>
+  <button class="nav-btn" data-page="watchlist">
+    <div class="nav-ico-wrap"><span class="nav-ico">🔖</span></div>
+    <span class="nav-lbl">Watchlist</span>
+  </button>
+  <button class="nav-btn" data-page="favs">
+    <div class="nav-ico-wrap"><span class="nav-ico">❤️</span></div>
+    <span class="nav-lbl">Favourites</span>
+  </button>
   <button class="nav-btn" data-page="profile" id="profileNavBtn">
-    <span class="nav-ico nav-avatar-wrap">
-      <img class="nav-avatar-img" id="navAvatarImg" src="" alt="" style="display:none">
-      <span class="nav-avatar-ph" id="navAvatarPh">👤</span>
-    </span>
-    Profile
+    <div class="nav-ico-wrap">
+      <span class="nav-ico nav-avatar-wrap">
+        <img class="nav-avatar-img" id="navAvatarImg" src="" alt="" style="display:none">
+        <span class="nav-avatar-ph" id="navAvatarPh">👤</span>
+      </span>
+    </div>
+    <span class="nav-lbl">Profile</span>
   </button>
 </nav>
 
@@ -1371,7 +1504,7 @@ function renderRow(e,i){
     <div class="row-day">${day}</div>
     ${thumb}
     <div class="row-info">
-      <div class="row-title-wrap"><span class="row-title">${e.title}</span><span class="row-year">${e.year||''}</span></div>
+      <div class="row-title-wrap"><span class="row-title" onclick="openInfo(${e.id},'logged',event)">${e.title}</span><span class="row-year">${e.year||''}</span></div>
       <div class="row-meta">${typeIco}${rBadge}${sPill}${fav}${noteIco}</div>
     </div>
     <button class="row-del" onclick="delEntry(${e.id},event)">✕</button>
@@ -1458,7 +1591,7 @@ function renderWL(){
     return `<div class="wl-card ${item.type}" style="animation-delay:${released.indexOf(item)*0.05}s">
       ${thumb}
       <div class="wl-info">
-        <div class="wl-title">${item.title}</div>
+        <div class="wl-title" onclick="openInfoFromWL(${i},event)">${item.title}</div>
         ${sub?`<div class="wl-sub">${sub}</div>`:''}
       </div>
       <div class="wl-actions">
@@ -1487,6 +1620,16 @@ document.querySelectorAll('.wl-tsel').forEach(btn=>{
     btn.classList.add('on',btn.dataset.wt);wlType=btn.dataset.wt;wlPending=null;
     const q=document.getElementById('wlInp').value.trim();if(q.length>=2)wlRunSearch(q);
   });
+});
+document.getElementById('wlInp').addEventListener('focus',()=>{
+  document.querySelector('.wl-type-bar').classList.add('show');
+});
+document.getElementById('wlInp').addEventListener('blur',()=>{
+  // Delay so type button clicks register first
+  setTimeout(()=>{
+    const q=document.getElementById('wlInp').value.trim();
+    if(!q) document.querySelector('.wl-type-bar').classList.remove('show');
+  },200);
 });
 document.getElementById('wlInp').addEventListener('input',()=>{
   const q=document.getElementById('wlInp').value.trim();wlPending=null;clearTimeout(wlSearchTmr);
@@ -1977,7 +2120,7 @@ function profileCard(e, removable){
     ? `<img src="${e.poster}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">`
     : `<div class="profile-card-ph" style="background:var(--bg4)">${icon}</div>`;
   const removeBtn = removable ? `<button class="profile-card-remove" onclick="removePick(${e.id},event)">✕</button>` : '';
-  return `<div class="profile-card ${e.type}" style="animation-delay:${Math.random()*0.2}s">
+  return `<div class="profile-card ${e.type}" style="animation-delay:${Math.random()*0.2}s" onclick="profileCardClick(${e.id})">
     ${poster}
     <div class="profile-card-overlay"></div>
     <div class="profile-card-type-bar"></div>
@@ -2174,7 +2317,185 @@ function renderUpcoming(){
   }).join('');
 }
 
-// ── EXPOSE TO WINDOW (required for onclick in HTML inside type=module) ──
+// ── INFO CARD ─────────────────────────────────────────────
+let _infoEntry = null;
+
+async function openInfo(id, context, ev){
+  if(ev) ev.stopPropagation();
+  const entry = DATA.find(x=>x.id===id);
+  if(!entry) return;
+  _infoEntry = entry;
+  showInfoCard(entry, context);
+  // Fetch extra details from API in background
+  fetchExtraInfo(entry);
+}
+
+async function openInfoFromWL(idx, ev){
+  if(ev) ev.stopPropagation();
+  const wl = getWL();
+  const item = wl[idx];
+  if(!item) return;
+  _infoEntry = {...item, id: idx, _wlIdx: idx};
+  showInfoCard(item, 'watchlist');
+  fetchExtraInfo(item);
+}
+
+function showInfoCard(entry, context){
+  const sheet = document.getElementById('infoSheet');
+  const overlay = document.getElementById('infoOverlay');
+
+  // Type class
+  sheet.className = `info-sheet ${entry.type||'movie'}`;
+
+  // Poster
+  const poster = document.getElementById('infoPoster');
+  const posterPh = document.getElementById('infoPosterPh');
+  if(entry.poster){ poster.src=entry.poster; poster.style.display='block'; posterPh.style.display='none'; }
+  else{ poster.style.display='none'; posterPh.style.display='flex'; posterPh.textContent=entry.type==='game'?'🎮':entry.type==='movie'?'🎬':'📺'; }
+
+  // Meta
+  const typeLabels = {movie:'Film',series:'Series',game:'Game'};
+  document.getElementById('infoTypePill').textContent = typeLabels[entry.type]||'Film';
+  document.getElementById('infoYear').textContent = entry.year||'';
+  document.getElementById('infoScore').style.display='none';
+  document.getElementById('infoTitle').textContent = entry.title;
+  document.getElementById('infoGenre').textContent = entry.genre||'';
+  document.getElementById('infoOverview').style.display='none';
+  document.getElementById('infoDetails').innerHTML='';
+
+  // Actions
+  const actions = document.getElementById('infoActions');
+  const isLogged = DATA.find(x=>x.id===entry.id);
+  actions.innerHTML = '';
+  if(context==='logged' || isLogged){
+    const editBtn = document.createElement('button');
+    editBtn.className='info-edit-btn';
+    editBtn.textContent='✏️ Edit Entry';
+    editBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>openEdit(entry.id),150); };
+    actions.appendChild(editBtn);
+  }
+  if(context==='watchlist'){
+    const logBtn = document.createElement('button');
+    logBtn.className='info-edit-btn';
+    logBtn.textContent='Log it ✓';
+    logBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>wlLog(_infoEntry._wlIdx),150); };
+    actions.appendChild(logBtn);
+    const removeBtn = document.createElement('button');
+    removeBtn.className='info-wl-btn';
+    removeBtn.textContent='Remove';
+    removeBtn.onclick=()=>{ closeInfoCard(); wlDel(_infoEntry._wlIdx); };
+    actions.appendChild(removeBtn);
+  }
+
+  overlay.classList.add('show');
+}
+
+async function fetchExtraInfo(entry){
+  try{
+    let data = null;
+    if(entry.type==='movie'){
+      // Search to get id then fetch details
+      const search = await fetch(`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(entry.title)}&api_key=${TMDB}`);
+      const sd = await search.json();
+      const first = sd.results?.[0];
+      if(first){
+        const detail = await fetch(`https://api.themoviedb.org/3/movie/${first.id}?api_key=${TMDB}&append_to_response=credits`);
+        data = await detail.json();
+        updateInfoCard({
+          overview: data.overview,
+          score: data.vote_average ? `⭐ ${data.vote_average.toFixed(1)}` : null,
+          details: [
+            {l:'Release',v: data.release_date||'—'},
+            {l:'Runtime', v: data.runtime?`${data.runtime} min`:'—'},
+            {l:'Language',v: (data.original_language||'').toUpperCase()},
+            {l:'Country', v: data.production_countries?.[0]?.iso_3166_1||'—'},
+            {l:'Director',v: data.credits?.crew?.find(x=>x.job==='Director')?.name||'—'},
+            {l:'Cast', v: data.credits?.cast?.slice(0,3).map(x=>x.name).join(', ')||'—'},
+          ]
+        });
+      }
+    } else if(entry.type==='series'){
+      const search = await fetch(`https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(entry.title)}&api_key=${TMDB}`);
+      const sd = await search.json();
+      const first = sd.results?.[0];
+      if(first){
+        const detail = await fetch(`https://api.themoviedb.org/3/tv/${first.id}?api_key=${TMDB}&append_to_response=credits`);
+        data = await detail.json();
+        updateInfoCard({
+          overview: data.overview,
+          score: data.vote_average ? `⭐ ${data.vote_average.toFixed(1)}` : null,
+          details: [
+            {l:'First Air', v: data.first_air_date||'—'},
+            {l:'Seasons',   v: data.number_of_seasons||'—'},
+            {l:'Episodes',  v: data.number_of_episodes||'—'},
+            {l:'Status',    v: data.status||'—'},
+            {l:'Language',  v: (data.original_language||'').toUpperCase()},
+            {l:'Cast',      v: data.credits?.cast?.slice(0,3).map(x=>x.name).join(', ')||'—'},
+          ]
+        });
+      }
+    } else if(entry.type==='game'){
+      const search = await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(entry.title)}&key=${RAWG}&page_size=1`);
+      const sd = await search.json();
+      const first = sd.results?.[0];
+      if(first){
+        const detail = await fetch(`https://api.rawg.io/api/games/${first.id}?key=${RAWG}`);
+        data = await detail.json();
+        updateInfoCard({
+          overview: data.description_raw?.slice(0,300)+(data.description_raw?.length>300?'…':''),
+          score: data.rating ? `⭐ ${data.rating.toFixed(1)}` : null,
+          details: [
+            {l:'Released',  v: data.released||'—'},
+            {l:'Playtime',  v: data.playtime?`~${data.playtime}h`:'—'},
+            {l:'Platforms', v: data.platforms?.slice(0,2).map(x=>x.platform.name).join(', ')||'—'},
+            {l:'Developer', v: data.developers?.[0]?.name||'—'},
+            {l:'Publisher', v: data.publishers?.[0]?.name||'—'},
+            {l:'Rating',    v: data.esrb_rating?.name||'—'},
+          ]
+        });
+      }
+    }
+  } catch(e){ /* silently fail, basic info already shown */ }
+}
+
+function updateInfoCard(info){
+  // Only update if card is still open
+  if(!document.getElementById('infoOverlay').classList.contains('show')) return;
+  if(info.overview){
+    const el = document.getElementById('infoOverview');
+    el.textContent = info.overview;
+    el.style.display='block';
+  }
+  if(info.score){
+    const el = document.getElementById('infoScore');
+    el.textContent = info.score;
+    el.style.display='inline-block';
+  }
+  if(info.details){
+    document.getElementById('infoDetails').innerHTML = info.details
+      .filter(d=>d.v&&d.v!=='—')
+      .map(d=>`<div class="info-detail-item"><div class="info-detail-lbl">${d.l}</div><div class="info-detail-val">${d.v}</div></div>`)
+      .join('');
+  }
+}
+
+function closeInfoCard(){
+  document.getElementById('infoOverlay').classList.remove('show');
+  _infoEntry = null;
+}
+
+document.getElementById('infoClose').addEventListener('click', closeInfoCard);
+document.getElementById('infoOverlay').addEventListener('click', e=>{
+  if(e.target===document.getElementById('infoOverlay')) closeInfoCard();
+});
+
+// Profile card click opens info
+function profileCardClick(id){
+  const entry = DATA.find(x=>x.id===id) || (window._pickExtras||[]).find(x=>x.id===id);
+  if(entry) openInfo(id,'profile',null);
+}
+
+// ── EXPOSE TO WINDOW ──────────────────────────────────────
 window.toggleFav        = toggleFav;
 window.delEntry         = delEntry;
 window.openEdit         = openEdit;
@@ -2183,6 +2504,9 @@ window.wlDel            = wlDel;
 window.removePick       = removePick;
 window.addPickFromSearch= addPickFromSearch;
 window.openPickSelector = openPickSelector;
+window.openInfo         = openInfo;
+window.openInfoFromWL   = openInfoFromWL;
+window.profileCardClick = profileCardClick;
 </script>
 </body>
 </html>
