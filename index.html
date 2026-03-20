@@ -1286,12 +1286,14 @@ function docWL()     { return doc(db_fs,`users/${currentUser.uid}/meta/watchlist
 async function fsSave(entry){
   if(!currentUser) return;
   await setDoc(doc(db_fs,`users/${currentUser.uid}/entries/${entry.id}`), entry);
+  cacheWrite(DATA);
   flashCloud();
 }
 // ── DELETE entry from Firestore ──────────────────────────
 async function fsDelete(id){
   if(!currentUser) return;
   await deleteDoc(doc(db_fs,`users/${currentUser.uid}/entries/${id}`));
+  cacheWrite(DATA.filter(x=>x.id!==id));
 }
 // ── SAVE watchlist to Firestore ──────────────────────────
 async function fsWLSave(wl){
@@ -1299,17 +1301,29 @@ async function fsWLSave(wl){
   await setDoc(docWL(),{items: wl});
 }
 // ── LOAD all data from Firestore ─────────────────────────
+// ── LOCAL CACHE ───────────────────────────────────────────
+const CACHE_KEY = 'lgr_cache';
+function cacheWrite(entries){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(entries)); }catch(e){} }
+function cacheRead(){ try{ const v=localStorage.getItem(CACHE_KEY); return v?JSON.parse(v):null; }catch(e){ return null; } }
+
 async function fsLoad(){
   if(!currentUser) return;
-  toast('☁️ Loading your data…', 60000);
-  // Load entries
-  const snap = await getDocs(colEntries());
-  DATA = snap.docs.map(d => d.data());
-  // Load watchlist
-  const wlSnap = await getDoc(docWL());
-  if(wlSnap.exists()) saveWL(wlSnap.data().items || []);
-  toast('✅ Synced!', 2000);
-  renderLog(); renderFavs(); renderWL();
+  // 1. Show cached data instantly
+  const cached = cacheRead();
+  if(cached && cached.length){
+    DATA = cached;
+    renderLog(); renderFavs(); renderWL();
+  }
+  // 2. Sync from Firestore silently in background
+  try{
+    const snap = await getDocs(colEntries());
+    DATA = snap.docs.map(d => d.data());
+    cacheWrite(DATA);
+    const wlSnap = await getDoc(docWL());
+    if(wlSnap.exists()) saveWL(wlSnap.data().items || []);
+    renderLog(); renderFavs(); renderWL();
+    flashCloud();
+  } catch(e){ console.error('Sync failed', e); }
 }
 
 // Tiny cloud flash
@@ -1379,17 +1393,19 @@ onAuthStateChanged(auth, async user=>{
 
 // Load owner's entries publicly (no auth needed — Firestore rules allow public read)
 async function fsLoadPublic(){
+  // Show cache instantly if available
+  const cached = cacheRead();
+  if(cached && cached.length){
+    DATA = cached;
+    renderLog(); renderFavs();
+  }
   try{
-    toast('📖 Loading diary…', 10000);
     const snap = await getDocs(collection(db_fs,`users/${OWNER_UID}/entries`));
     DATA = snap.docs.map(d => d.data());
-    toast('', 0);
+    cacheWrite(DATA);
     renderLog(); renderFavs();
   } catch(e){
-    toast('', 0);
-    // If rules block public read, just show empty
-    DATA = [];
-    renderLog();
+    if(!cached){ DATA = []; renderLog(); }
   }
 }
 
@@ -1549,7 +1565,7 @@ function renderFavs(){
     const thumb=e.poster
       ?`<img class="fav-thumb" src="${e.poster}" loading="lazy" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="fav-ph" style="display:none">${icon}</div>`
       :`<div class="fav-ph">${icon}</div>`;
-    return `<div class="fav-card ${e.type}" style="animation-delay:${i*0.04}s" onclick="openEdit(${e.id})">
+    return `<div class="fav-card ${e.type}" style="animation-delay:${i*0.04}s" onclick="openInfo(${e.id},'favs',event)">
       ${thumb}
       <div class="fav-info">
         <div class="fav-title">${e.title}</div>
@@ -2042,6 +2058,8 @@ function savePfp(url){
   updateHeaderAvatar(url, currentUser?.displayName||'A');
   if(currentUser) setDoc(doc(db_fs,`users/${currentUser.uid}/meta/profile`),{pfp:url},{merge:true});
 }
+function getPickExtras(){ try{ return JSON.parse(localStorage.getItem(profileKey('extras'))||'[]'); }catch(e){ return []; } }
+function savePickExtras(arr){ try{ localStorage.setItem(profileKey('extras'), JSON.stringify(arr)); }catch(e){} }
 function getDisplayName(){ return currentUser ? (currentUser.displayName||currentUser.email?.split('@')[0]||'You') : 'Aditya'; }
 
 function updateHeaderAvatar(pfp, name){
@@ -2136,7 +2154,7 @@ function profileCard(e, removable){
 function renderTopPicks(){
   const picks = getPicks();
   const pickEntries = picks.map(id=>{
-    return DATA.find(x=>x.id===id) || (window._pickExtras||[]).find(x=>x.id===id);
+    return DATA.find(x=>x.id===id) || getPickExtras().find(x=>x.id===id);
   }).filter(Boolean);
   const grid = document.getElementById('topPicksGrid');
   const editBtn = document.getElementById('editPicksBtn');
@@ -2249,9 +2267,9 @@ function addPickFromSearch(r){
     const existing = DATA.find(x=>x.title.toLowerCase()===r.title.toLowerCase()&&x.type===r.type);
     const pickEntry = existing || { id: Date.now(), title:r.title, poster:r.poster||'', year:r.year||'', genre:r.genre||'', type:r.type, rating:'decent', fav:false, notes:'' };
     if(!existing){
-      if(!window._pickExtras) window._pickExtras=[];
-      window._pickExtras = window._pickExtras.filter(x=>x.title!==pickEntry.title);
-      window._pickExtras.push(pickEntry);
+      const extras = getPickExtras().filter(x=>x.title!==pickEntry.title);
+      extras.push(pickEntry);
+      savePickExtras(extras);
     }
     if(!picks.includes(pickEntry.id)) picks.push(pickEntry.id);
     savePicks(picks);
@@ -2369,7 +2387,7 @@ function showInfoCard(entry, context){
   const actions = document.getElementById('infoActions');
   const isLogged = DATA.find(x=>x.id===entry.id);
   actions.innerHTML = '';
-  if(context==='logged' || isLogged){
+  if(context==='logged' && isLogged){
     const editBtn = document.createElement('button');
     editBtn.className='info-edit-btn';
     editBtn.textContent='✏️ Edit Entry';
@@ -2494,7 +2512,7 @@ document.getElementById('infoOverlay').addEventListener('click', e=>{
 
 // Profile card click opens info
 function profileCardClick(id){
-  const entry = DATA.find(x=>x.id===id) || (window._pickExtras||[]).find(x=>x.id===id);
+  const entry = DATA.find(x=>x.id===id) || getPickExtras().find(x=>x.id===id);
   if(entry) openInfo(id,'profile',null);
 }
 
