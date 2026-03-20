@@ -2018,7 +2018,9 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
   btn.textContent = '⬇ Save Image';
   btn.disabled = false;
 });
-DATA = [];
+// Boot — show cache instantly, Firebase syncs in background
+const _bootCache = cacheRead();
+DATA = _bootCache || [];
 setStatusOpts();
 renderLog();
 renderUpcoming();
@@ -2263,7 +2265,10 @@ async function runPickSearch(q, type){
 function addPickFromSearch(r){
   try{
     const picks = getPicks();
-    if(picks.length>=6){ toast('Already have 6 picks'); return; }
+    const resolved = picks.map(id=>DATA.find(x=>x.id===id)||getPickExtras().find(x=>x.id===id)).filter(Boolean);
+    if(resolved.length>=6){ toast('Already have 6 picks'); return; }
+    // Clean stale IDs before adding
+    const cleanPicks = picks.filter(id=>DATA.find(x=>x.id===id)||getPickExtras().find(x=>x.id===id));
     const existing = DATA.find(x=>x.title.toLowerCase()===r.title.toLowerCase()&&x.type===r.type);
     const pickEntry = existing || { id: Date.now(), title:r.title, poster:r.poster||'', year:r.year||'', genre:r.genre||'', type:r.type, rating:'decent', fav:false, notes:'' };
     if(!existing){
@@ -2271,8 +2276,8 @@ function addPickFromSearch(r){
       extras.push(pickEntry);
       savePickExtras(extras);
     }
-    if(!picks.includes(pickEntry.id)) picks.push(pickEntry.id);
-    savePicks(picks);
+    if(!cleanPicks.includes(pickEntry.id)) cleanPicks.push(pickEntry.id);
+    savePicks(cleanPicks);
     document.getElementById('pickSheet')?.remove();
     renderTopPicks();
     toast('✅ Added to Top Picks');
