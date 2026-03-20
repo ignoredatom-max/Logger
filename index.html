@@ -430,7 +430,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .tmdb-attr{font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:0.2px}
 
 /* ── WATCHLIST ────────────────────────────────── */
-.wl-search-wrap{padding:10px 16px 0;border-bottom:1px solid var(--border)}
+.wl-search-wrap{padding:6px 16px 0;border-bottom:1px solid var(--border)}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px;overflow:hidden;max-height:0;opacity:0;transition:max-height 0.25s ease,opacity 0.2s ease,margin 0.25s ease;margin-bottom:0;}
 .wl-type-bar.show{max-height:48px;opacity:1;margin-bottom:10px;}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px}
@@ -693,17 +693,14 @@ body.readonly .row{cursor:default}
 }
 .info-sheet::-webkit-scrollbar{display:none}
 .info-poster-wrap{
-  position:relative;width:100%;height:220px;overflow:hidden;
-  background:var(--bg3);
+  position:relative;width:90px;height:130px;overflow:hidden;
+  background:var(--bg3);border-radius:10px;flex-shrink:0;
 }
 .info-poster{width:100%;height:100%;object-fit:cover;display:block;}
-.info-poster-gradient{
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%);
-}
+.info-poster-gradient{display:none;}
 .info-poster-ph{
   width:100%;height:100%;display:flex;align-items:center;
-  justify-content:center;font-size:64px;
+  justify-content:center;font-size:36px;
 }
 .info-close{
   position:absolute;top:14px;right:14px;
@@ -712,13 +709,15 @@ body.readonly .row{cursor:default}
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   backdrop-filter:blur(8px);
 }
-.info-type-bar{
-  position:absolute;top:0;right:0;bottom:0;width:4px;
+.info-type-bar{display:none;}
+.info-header-row{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--border);
+  position:relative;
 }
-.info-sheet.movie .info-type-bar{background:var(--red);}
-.info-sheet.series .info-type-bar{background:var(--teal);}
-.info-sheet.game .info-type-bar{background:var(--green);}
-.info-body{padding:18px 18px 32px;}
+.info-header-text{flex:1;min-width:0;}
+.info-body{padding:14px 18px 32px;}
 .info-meta-row{
   display:flex;align-items:center;gap:8px;
   margin-bottom:8px;flex-wrap:wrap;
@@ -731,8 +730,8 @@ body.readonly .row{cursor:default}
 .info-sheet.series .info-type-pill{background:rgba(0,180,216,0.15);color:var(--teal);}
 .info-sheet.game .info-type-pill{background:rgba(0,197,102,0.15);color:var(--green);}
 .info-year{font-size:11px;color:var(--text3);}
-.info-title{font-size:22px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:6px;}
-.info-genre{font-size:12px;color:var(--text3);margin-bottom:14px;}
+.info-title{font-size:17px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:5px;}
+.info-genre{font-size:11px;color:var(--text3);margin-bottom:0;}
 .info-rating-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .info-score{
   font-size:13px;font-weight:700;padding:4px 10px;
@@ -981,7 +980,7 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
 
 <!-- WATCHLIST PAGE -->
 <div class="page" id="page-watchlist">
-  <div class="header" style="padding-top:16px;padding-bottom:12px">
+  <div class="header" style="padding-top:14px;padding-bottom:6px">
     <div>
       <div class="logo-wrap"><span class="logo-l">W</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">atchlist</span><div class="logo-dot"></div></div>
       <div class="header-sub">Things to check out</div>
@@ -1078,21 +1077,23 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
 <!-- INFO CARD -->
 <div class="info-overlay" id="infoOverlay">
   <div class="info-sheet" id="infoSheet">
-    <div class="info-poster-wrap">
-      <img class="info-poster" id="infoPoster" src="" alt="">
-      <div class="info-poster-ph" id="infoPosterPh" style="display:none"></div>
-      <div class="info-poster-gradient"></div>
-      <div class="info-type-bar"></div>
+    <div class="info-header-row">
+      <div class="info-poster-wrap">
+        <img class="info-poster" id="infoPoster" src="" alt="">
+        <div class="info-poster-ph" id="infoPosterPh" style="display:none"></div>
+      </div>
+      <div class="info-header-text">
+        <div class="info-meta-row">
+          <span class="info-type-pill" id="infoTypePill"></span>
+          <span class="info-year" id="infoYear"></span>
+          <span class="info-score" id="infoScore" style="display:none"></span>
+        </div>
+        <div class="info-title" id="infoTitle"></div>
+        <div class="info-genre" id="infoGenre"></div>
+      </div>
       <button class="info-close" id="infoClose">✕</button>
     </div>
     <div class="info-body">
-      <div class="info-meta-row">
-        <span class="info-type-pill" id="infoTypePill"></span>
-        <span class="info-year" id="infoYear"></span>
-        <span class="info-score" id="infoScore" style="display:none"></span>
-      </div>
-      <div class="info-title" id="infoTitle"></div>
-      <div class="info-genre" id="infoGenre"></div>
       <div class="info-overview" id="infoOverview" style="display:none"></div>
       <div class="info-details" id="infoDetails"></div>
       <div class="info-actions" id="infoActions"></div>
@@ -2375,16 +2376,17 @@ function showInfoCard(entry, context){
     actions.appendChild(editBtn);
   }
   if(context==='watchlist'){
-    const logBtn = document.createElement('button');
-    logBtn.className='info-edit-btn';
-    logBtn.textContent='Log it ✓';
-    logBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>wlLog(_infoEntry._wlIdx),150); };
-    actions.appendChild(logBtn);
     const removeBtn = document.createElement('button');
     removeBtn.className='info-wl-btn';
     removeBtn.textContent='Remove';
     removeBtn.onclick=()=>{ closeInfoCard(); wlDel(_infoEntry._wlIdx); };
     actions.appendChild(removeBtn);
+    const logBtn = document.createElement('button');
+    logBtn.className='info-edit-btn';
+    logBtn.textContent='Log it ✓';
+    logBtn.style.flex='2';
+    logBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>wlLog(_infoEntry._wlIdx),150); };
+    actions.appendChild(logBtn);
   }
 
   overlay.classList.add('show');
