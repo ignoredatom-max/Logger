@@ -900,25 +900,35 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
 .upcoming-grid::-webkit-scrollbar{display:none}
 .upcoming-card{
   border-radius:12px;overflow:hidden;position:relative;
-  background:var(--bg3);border:1px solid var(--border);
+  border:1px solid var(--border);
   animation:fadeUp 0.3s ease both;
   flex:0 0 130px;
+  background:var(--bg3);
 }
-.upcoming-poster-wrap{position:relative;width:100%;height:72px;overflow:hidden;}
-.upcoming-poster{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.6);}
+.upcoming-poster-wrap{
+  position:absolute;inset:0;width:100%;height:100%;overflow:hidden;
+}
+.upcoming-poster{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.45);}
 .upcoming-poster-ph{
   width:100%;height:100%;display:flex;align-items:center;
   justify-content:center;font-size:22px;background:var(--bg4);
 }
 .upcoming-type-bar{
-  position:absolute;top:0;right:0;bottom:0;width:3px;
+  position:absolute;top:0;right:0;bottom:0;width:3px;z-index:2;
 }
 .upcoming-card.movie .upcoming-type-bar{background:var(--red);}
 .upcoming-card.series .upcoming-type-bar{background:var(--teal);}
 .upcoming-card.game .upcoming-type-bar{background:var(--green);}
-.upcoming-body{padding:8px 10px 10px;}
+.upcoming-body{
+  position:relative;z-index:1;
+  padding:8px 10px 10px;
+  margin-top:72px;
+  background:rgba(20,20,20,0.55);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
 .upcoming-title{
-  font-size:11px;font-weight:600;color:var(--text2);
+  font-size:11px;font-weight:600;color:var(--text);
   margin-bottom:6px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   line-height:1.3;
