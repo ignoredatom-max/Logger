@@ -776,6 +776,8 @@ body.readonly .row{cursor:default}
   margin-bottom:6px;
 }
 .tutorial-sub{font-size:12px;color:var(--text3);margin-bottom:36px;}
+.tutorial-tagline{font-size:13px;color:var(--text2);margin-bottom:32px;line-height:1.5;max-width:280px;margin-left:auto;margin-right:auto;}
+.tutorial-footer{margin-top:16px;font-size:12px;color:var(--text3);text-align:center;}
 .tutorial-steps{display:flex;flex-direction:column;gap:16px;margin-bottom:36px;text-align:left;}
 .tutorial-step{display:flex;align-items:flex-start;gap:14px;}
 .tutorial-step-num{
@@ -1175,7 +1177,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
     <div class="tutorial-logo">
       <span class="logo-l">L</span><span class="logo-ogger">ogger</span><div class="logo-dot"></div>
     </div>
-    <div class="tutorial-sub">Your personal media diary</div>
+    <div class="tutorial-tagline">Built by Aditya to track every film, series and game worth remembering.</div>
     <div class="tutorial-steps">
       <div class="tutorial-step">
         <div class="tutorial-step-num">1</div>
@@ -1183,14 +1185,15 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       </div>
       <div class="tutorial-step">
         <div class="tutorial-step-num">2</div>
-        <div class="tutorial-step-text">Tap <b>+ Add</b> in the Log tab to log your first film, series or game</div>
+        <div class="tutorial-step-text">Tap <b>+ Add</b> in the Log tab to start logging</div>
       </div>
       <div class="tutorial-step">
         <div class="tutorial-step-num">3</div>
-        <div class="tutorial-step-text">Go to <b>Profile</b> tab and copy your share link for Instagram</div>
+        <div class="tutorial-step-text">Go to <b>Profile</b> → copy your link → share it anywhere</div>
       </div>
     </div>
     <button class="tutorial-signin-btn" id="tutorialSignInBtn">Sign in with Google</button>
+    <div class="tutorial-footer">Want to see Aditya's log? <a href="?u=kFMRmHi4hzakOaQFx7ccanUsIbl1" style="color:var(--blue);text-decoration:none">Tap here →</a></div>
   </div>
 </div>
 
@@ -1532,6 +1535,8 @@ async function fsLoadPublic(uid){
     DATA = snap.docs.map(d => d.data());
     cacheWrite(DATA);
     renderLog(); renderFavs();
+    // Re-render profile if currently on that tab
+    if(document.getElementById('page-profile').classList.contains('on')) renderProfile();
   } catch(e){
     if(!cached){ DATA = []; renderLog(); }
   }
@@ -1849,7 +1854,13 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     }
     if(p==='favs')renderFavs();
     if(p==='watchlist'){renderWL();renderUpcoming();}
-    if(p==='profile')renderProfile();
+    if(p==='profile'){
+      renderProfile();
+      // If visitor and profile data not yet loaded, reload it
+      if(!currentUser && PUBLIC_UID && !getPfp() && !getPicks().length){
+        loadPublicProfile(PUBLIC_UID).then(()=>renderProfile());
+      }
+    }
   });
 });
 
@@ -2268,7 +2279,7 @@ function getDisplayName(){
   const custom = getCustomName();
   if(custom) return custom;
   if(currentUser) return currentUser.displayName||currentUser.email?.split('@')[0]||'You';
-  return 'Logger User';
+  return 'Logger'; // shown only if name not yet loaded
 }
 
 function updateHeaderAvatar(pfp, name){
