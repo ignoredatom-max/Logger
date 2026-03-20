@@ -2080,30 +2080,32 @@ async function runPickSearch(q, type){
     mType = sv;
     if(!results.length){ res.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No results</div>'; return; }
     const icon = type==='game'?'🎮':type==='movie'?'🎬':'📺';
-    res.innerHTML = results.slice(0,8).map((r,i)=>`
-      <div onclick="addPickFromSearch('${encodeURIComponent(JSON.stringify({title:r.title,poster:r.poster,year:r.year,genre:r.genre,type:type,id:Date.now()+${i}}))')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;">
-        ${r.poster?`<img src="${r.poster}" style="width:32px;height:48px;object-fit:cover;border-radius:5px;flex-shrink:0;">`:`<div style="width:32px;height:48px;border-radius:5px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${icon}</div>`}
+    res.innerHTML = '';
+    results.slice(0,8).forEach((r,i)=>{
+      const div = document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;';
+      div.innerHTML = `${r.poster?`<img src="${r.poster}" style="width:32px;height:48px;object-fit:cover;border-radius:5px;flex-shrink:0;">`:`<div style="width:32px;height:48px;border-radius:5px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${icon}</div>`}
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--text)">${r.title}</div>
           <div style="font-size:10px;color:var(--text3)">${[r.year,r.genre].filter(Boolean).join(' · ')}</div>
-        </div>
-      </div>
-    `).join('');
+        </div>`;
+      div.addEventListener('click',()=>{
+        addPickFromSearch({title:r.title,poster:r.poster,year:r.year,genre:r.genre,type});
+      });
+      res.appendChild(div);
+    });
   } catch(e){ res.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">Search failed</div>'; }
 }
 
-function addPickFromSearch(encoded){
+function addPickFromSearch(r){
   try{
-    const r = JSON.parse(decodeURIComponent(encoded));
     const picks = getPicks();
     if(picks.length>=6){ toast('Already have 6 picks'); return; }
-    // Use a stable ID: check if this title already in DATA
     const existing = DATA.find(x=>x.title.toLowerCase()===r.title.toLowerCase()&&x.type===r.type);
-    const pickEntry = existing || { id: Date.now(), title:r.title, poster:r.poster, year:r.year, genre:r.genre, type:r.type, rating:'decent', fav:false, notes:'' };
+    const pickEntry = existing || { id: Date.now(), title:r.title, poster:r.poster||'', year:r.year||'', genre:r.genre||'', type:r.type, rating:'decent', fav:false, notes:'' };
     if(!existing){
-      // Add to a temp in-memory list for display only (not logged)
       if(!window._pickExtras) window._pickExtras=[];
-      window._pickExtras = window._pickExtras.filter(x=>x.id!==pickEntry.id);
+      window._pickExtras = window._pickExtras.filter(x=>x.title!==pickEntry.title);
       window._pickExtras.push(pickEntry);
     }
     if(!picks.includes(pickEntry.id)) picks.push(pickEntry.id);
