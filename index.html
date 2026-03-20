@@ -796,9 +796,10 @@ body.readonly .row{cursor:default}
 
 /* ── PROFILE SHARE BTN ───────────────────────── */
 .profile-share-btn{
-  margin-top:10px;padding:8px 18px;
+  position:absolute;top:16px;right:16px;
+  padding:7px 14px;
   background:var(--bg3);border:1px solid var(--border2);
-  border-radius:20px;color:var(--text2);font-size:12px;font-weight:600;
+  border-radius:20px;color:var(--text2);font-size:11px;font-weight:600;
   cursor:pointer;font-family:Inter,sans-serif;
   transition:background 0.15s;
 }
@@ -820,6 +821,7 @@ body.readonly .row{cursor:default}
 .profile-header{
   display:flex;flex-direction:column;align-items:center;
   padding:28px 16px 20px;text-align:center;gap:12px;
+  position:relative;
 }
 .profile-pfp-wrap{position:relative;}
 .profile-pfp,.profile-pfp-ph{
@@ -841,6 +843,8 @@ body.readonly .row{cursor:default}
 }
 body:not(.readonly) .profile-pfp-edit{display:flex;}
 .profile-name{font-size:22px;font-weight:800;color:var(--text);margin-top:4px;}
+body:not(.readonly) .profile-name{cursor:pointer;}
+body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity:0.4;}
 .profile-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 .profile-section{padding:0 0 12px;}
 .profile-section-hdr{
@@ -1104,7 +1108,7 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
       </label>
     </div>
     <div class="profile-info">
-      <div class="profile-name" id="profileName">Aditya</div>
+      <div class="profile-name" id="profileName" onclick="editProfileName()">Aditya</div>
       <div class="profile-sub" id="profileSub">—</div>
       <button class="profile-share-btn" id="profileShareBtn" style="display:none">🔗 Copy my link</button>
     </div>
@@ -1522,6 +1526,7 @@ document.getElementById('authBtn').addEventListener('click', async()=>{
 async function fsLoadPublic(uid){
   const cached = cacheRead();
   if(cached && cached.length){ DATA = cached; renderLog(); renderFavs(); }
+  await loadPublicProfile(uid);
   try{
     const snap = await getDocs(collection(db_fs,`users/${uid}/entries`));
     DATA = snap.docs.map(d => d.data());
@@ -2232,7 +2237,10 @@ function renderStats(){
 // ── PROFILE PAGE ─────────────────────────────────────────
 let editingPicks = false;
 
-function profileKey(k){ return `lgr_${currentUser?currentUser.uid:OWNER_UID}_${k}`; }
+function profileKey(k){
+  const uid = currentUser ? currentUser.uid : (PUBLIC_UID || OWNER_UID);
+  return `lgr_${uid}_${k}`;
+}
 function getPicks(){ return JSON.parse(localStorage.getItem(profileKey('picks'))||'[]'); }
 function savePicks(p){
   localStorage.setItem(profileKey('picks'), JSON.stringify(p));
@@ -2241,12 +2249,27 @@ function savePicks(p){
 function getPfp(){ return localStorage.getItem(profileKey('pfp'))||''; }
 function savePfp(url){
   localStorage.setItem(profileKey('pfp'), url);
-  updateHeaderAvatar(url, currentUser?.displayName||'A');
+  updateHeaderAvatar(url, getDisplayName());
   if(currentUser) setDoc(doc(db_fs,`users/${currentUser.uid}/meta/profile`),{pfp:url},{merge:true});
 }
+function getCustomName(){ return localStorage.getItem(profileKey('name'))||''; }
+function saveCustomName(n){
+  localStorage.setItem(profileKey('name'), n);
+  if(currentUser) setDoc(doc(db_fs,`users/${currentUser.uid}/meta/profile`),{displayName:n},{merge:true});
+}
 function getPickExtras(){ try{ return JSON.parse(localStorage.getItem(profileKey('extras'))||'[]'); }catch(e){ return []; } }
-function savePickExtras(arr){ try{ localStorage.setItem(profileKey('extras'), JSON.stringify(arr)); }catch(e){} }
-function getDisplayName(){ return currentUser ? (currentUser.displayName||currentUser.email?.split('@')[0]||'You') : 'Aditya'; }
+function savePickExtras(arr){
+  try{
+    localStorage.setItem(profileKey('extras'), JSON.stringify(arr));
+    if(currentUser) setDoc(doc(db_fs,`users/${currentUser.uid}/meta/profile`),{extras:arr},{merge:true});
+  }catch(e){}
+}
+function getDisplayName(){
+  const custom = getCustomName();
+  if(custom) return custom;
+  if(currentUser) return currentUser.displayName||currentUser.email?.split('@')[0]||'You';
+  return 'Logger User';
+}
 
 function updateHeaderAvatar(pfp, name){
   // Nav profile tab avatar
@@ -2261,7 +2284,7 @@ function updateHeaderAvatar(pfp, name){
   }
 }
 
-// Load profile data from Firestore for current user
+// Load profile data from Firestore for signed-in user
 async function loadUserProfile(){
   if(!currentUser) return;
   try{
@@ -2270,9 +2293,26 @@ async function loadUserProfile(){
       const d = snap.data();
       if(d.pfp){ localStorage.setItem(profileKey('pfp'), d.pfp); }
       if(d.picks){ localStorage.setItem(profileKey('picks'), JSON.stringify(d.picks)); }
+      if(d.displayName){ localStorage.setItem(profileKey('name'), d.displayName); }
+      if(d.extras){ localStorage.setItem(profileKey('extras'), JSON.stringify(d.extras)); }
     }
   }catch(e){}
   updateHeaderAvatar(getPfp(), getDisplayName());
+}
+
+// Load profile data for a public UID (visitor viewing someone's ?u= link)
+async function loadPublicProfile(uid){
+  try{
+    const snap = await getDoc(doc(db_fs,`users/${uid}/meta/profile`));
+    if(snap.exists()){
+      const d = snap.data();
+      const key = (k)=>`lgr_${uid}_${k}`;
+      if(d.pfp)  localStorage.setItem(key('pfp'), d.pfp);
+      if(d.picks) localStorage.setItem(key('picks'), JSON.stringify(d.picks));
+      if(d.displayName) localStorage.setItem(key('name'), d.displayName);
+      if(d.extras) localStorage.setItem(key('extras'), JSON.stringify(d.extras));
+    }
+  }catch(e){}
 }
 
 function renderProfile(){
@@ -2706,6 +2746,17 @@ function profileCardClick(id){
   if(entry) openInfo(id,'profile',null);
 }
 
+function editProfileName(){
+  if(!currentUser) return; // visitors can't edit
+  const current = getCustomName() || getDisplayName();
+  const newName = prompt('Enter your display name:', current);
+  if(newName && newName.trim() && newName.trim()!==current){
+    saveCustomName(newName.trim());
+    document.getElementById('profileName').textContent = newName.trim();
+    toast('✅ Name updated');
+  }
+}
+
 // ── TUTORIAL ─────────────────────────────────────────────
 function showTutorial(){
   document.getElementById('tutorialOverlay').style.display='flex';
@@ -2750,6 +2801,7 @@ window.openPickSelector = openPickSelector;
 window.openInfo         = openInfo;
 window.openInfoFromWL   = openInfoFromWL;
 window.profileCardClick = profileCardClick;
+window.editProfileName  = editProfileName;
 </script>
 </body>
 </html>
