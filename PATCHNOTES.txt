@@ -3,6 +3,43 @@ Personal Media Diary by Aditya
 ————————————————————————————————————————
 
 
+1.8.0
+20 March 2026
+
+  - Added season tracker for series
+  - Season picker appears when logging a series with status Finished
+  - Shows all seasons from TMDB, tap to select up to last watched
+  - Selecting S3 means S1, S2, S3 all counted — shows last season
+  - Status pill in list shows "Completed S3" instead of Finished
+  - Re-logging same series pre-fills from your last entry
+  - Season picker hides for Watching, Dropped, Want to statuses
+
+  - Added ?u= shareable profile links
+  - yoursite.github.io shows tutorial page for new users
+  - yoursite.github.io?u=UID shows that person's public diary
+  - Profile tab has Copy my link button (top right, signed in only)
+  - Tutorial page shows app intro and sign in button
+  - Footer on tutorial says "made with ♥️ by Aditya"
+
+  - Profile name is now customisable
+  - Tap your name in Profile to edit it inline
+  - Saves to Firestore, visible to anyone on your share link
+  - Share card now shows your custom name instead of hardcoded text
+
+  - PFP compressed to 200x200 before saving — no Firestore size issues
+  - PFP cropped to square from center automatically
+
+  - Added TMDB and RAWG attribution to Settings sheet with links
+  - TMDB link also added in search modal
+
+  - Fixed cache per user — no bleed between different accounts
+  - Fixed delete updating cache correctly
+  - Fixed upcoming grid not refreshing after logging a watchlist item
+  - Fixed info card not opening for profile picks not in log
+  - Fixed watchlist info card using wrong ID
+  - Fixed wlLogIdx declaration order
+  - 7 bugs fixed total from code review
+
 1.7.0
 20 March 2026
 
