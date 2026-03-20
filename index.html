@@ -1413,7 +1413,8 @@ async function fsSave(entry){
 async function fsDelete(id){
   if(!currentUser) return;
   await deleteDoc(doc(db_fs,`users/${currentUser.uid}/entries/${id}`));
-  cacheWrite(DATA.filter(x=>x.id!==id));
+  DATA = DATA.filter(x=>x.id!==id);
+  cacheWrite(DATA);
 }
 // ── SAVE watchlist to Firestore ──────────────────────────
 async function fsWLSave(wl){
@@ -1423,8 +1424,20 @@ async function fsWLSave(wl){
 // ── LOAD all data from Firestore ─────────────────────────
 // ── LOCAL CACHE ───────────────────────────────────────────
 const CACHE_KEY = 'lgr_cache';
-function cacheWrite(entries){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(entries)); }catch(e){} }
-function cacheRead(){ try{ const v=localStorage.getItem(CACHE_KEY); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function cacheKey(){ return currentUser ? `lgr_cache_${currentUser.uid}` : (PUBLIC_UID ? `lgr_cache_${PUBLIC_UID}` : CACHE_KEY); }
+function cacheWrite(entries){ try{ localStorage.setItem(cacheKey(), JSON.stringify(entries)); }catch(e){} }
+function cacheRead(){
+  try{
+    // Try UID-specific cache first, fall back to generic
+    const uid = currentUser?.uid || PUBLIC_UID;
+    if(uid){
+      const v = localStorage.getItem(`lgr_cache_${uid}`);
+      if(v) return JSON.parse(v);
+    }
+    const v = localStorage.getItem(CACHE_KEY);
+    return v ? JSON.parse(v) : null;
+  }catch(e){ return null; }
+}
 
 async function fsLoad(){
   if(!currentUser) return;
@@ -1698,7 +1711,6 @@ async function delEntry(id,ev){
   ev.stopPropagation();
   if(!confirm('Delete this entry?'))return;
   await fsDelete(id);
-  DATA=DATA.filter(x=>x.id!==id);
   renderLog();renderFavs();
   toast('Deleted');
 }
@@ -1776,14 +1788,14 @@ function renderWL(){
 }
 function wlDel(i){const wl=getWL();wl.splice(i,1);saveWL(wl);renderWL();toast('Removed from watchlist');}
 
+let wlLogIdx=-1;
+
 function wlLog(i){
   const wl=getWL();
   const item=wl[i];
-  // Store index so save handler can remove from watchlist after
   wlLogIdx=i;
   openModal(null,item);
 }
-let wlLogIdx=-1;
 
 // ── WATCHLIST SEARCH ────────────────────────────────────
 let wlType='movie',wlPending=null,wlSearchTmr=null;
@@ -2138,7 +2150,7 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
   if(wi>=0){wl.splice(wi,1);saveWL(wl);}
   wlLogIdx=-1;
   overlay.classList.remove('show');
-  renderLog();renderFavs();renderWL();
+  renderLog();renderFavs();renderWL();renderUpcoming();
   toast(isDup?'✅ Saved as Rewatched!':(editId?'✅ Updated!':'✅ Saved!'));
 });
 
