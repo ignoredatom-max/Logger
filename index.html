@@ -92,16 +92,15 @@ body::before{content:none}
 .count-item.m .count-num{color:var(--red)}
 .count-item.s .count-num{color:var(--teal)}
 .count-item.g .count-num{color:var(--green)}
+.settings-btn{background:none;border:none;color:var(--text3);font-size:19px;cursor:pointer;padding:4px;transition:color 0.2s;line-height:1}
+.settings-btn:active{color:var(--text)}
 .avatar-btn{background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;}
-.avatar-img,.avatar-ph{
-  width:32px;height:32px;border-radius:50%;
-  object-fit:cover;display:block;
-}
-.avatar-ph{
-  background:var(--bg4);border:1.5px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:700;color:var(--text2);
-}
+.avatar-img,.avatar-ph{width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;}
+.avatar-ph{background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text2);}
+/* Nav avatar */
+.nav-avatar-wrap{display:flex;align-items:center;justify-content:center;}
+.nav-avatar-img{width:22px;height:22px;border-radius:50%;object-fit:cover;}
+.nav-avatar-ph{font-size:18px;line-height:1;}
 
 /* ── TOOLBAR ─────────────────────────────────── */
 .toolbar{padding:4px 16px 10px;display:flex;gap:8px;align-items:center}
@@ -694,24 +693,29 @@ body.readonly .row{cursor:default}
 body:not(.readonly) .profile-pfp-edit{display:flex;}
 .profile-name{font-size:20px;font-weight:800;color:var(--text);}
 .profile-sub{font-size:11px;color:var(--text3);margin-top:3px;}
-.profile-section{padding:0 14px 16px;}
+.profile-section{padding:0 0 12px;}
 .profile-section-hdr{
   display:flex;align-items:center;justify-content:space-between;
-  padding:12px 2px 10px;
+  padding:7px 16px;
+  background:var(--bg3);
+  border-top:1px solid var(--border2);
+  border-bottom:1px solid var(--border2);
+  margin-bottom:10px;
 }
 .profile-section-title{
-  font-size:10px;font-weight:700;color:var(--text3);
-  text-transform:uppercase;letter-spacing:1px;
+  font-size:10px;font-weight:700;color:var(--text2);
+  text-transform:uppercase;letter-spacing:1.2px;
 }
 .profile-edit-btn{
   font-size:11px;color:var(--blue);background:none;border:none;
   cursor:pointer;font-family:Inter,sans-serif;font-weight:600;
 }
 .profile-grid{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  padding:0 14px;
 }
 .profile-card{
-  border-radius:12px;overflow:hidden;position:relative;
+  border-radius:10px;overflow:hidden;position:relative;
   aspect-ratio:2/3;cursor:pointer;
   animation:fadeUp 0.3s ease both;
 }
@@ -761,6 +765,7 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
 .profile-divider{height:1px;background:var(--border);margin:0 14px 4px;}
 .profile-stats{
   display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  padding:0 14px;
 }
 .pstat{
   background:var(--bg3);border-radius:12px;
@@ -833,10 +838,7 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
         <div class="count-item s"><div class="count-num" id="cs">0</div><div class="count-label">Series</div></div>
         <div class="count-item g"><div class="count-num" id="cg">0</div><div class="count-label">Games</div></div>
       </div>
-      <button class="avatar-btn" id="settingsBtn" title="Settings">
-        <img class="avatar-img" id="headerAvatar" src="" alt="" style="display:none">
-        <div class="avatar-ph" id="headerAvatarPh">A</div>
-      </button>
+      <button class="settings-btn" id="settingsBtn">⚙︎</button>
     </div>
   </div>
   <div class="toolbar">
@@ -934,9 +936,6 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
     <div class="profile-grid" id="topPicksGrid"></div>
   </div>
 
-  <!-- DIVIDER -->
-  <div class="profile-divider"></div>
-
   <!-- RECENT ACTIVITY -->
   <div class="profile-section">
     <div class="profile-section-hdr">
@@ -944,9 +943,6 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
     </div>
     <div class="profile-grid" id="recentGrid"></div>
   </div>
-
-  <!-- DIVIDER -->
-  <div class="profile-divider"></div>
 
   <!-- STATS -->
   <div class="profile-section">
@@ -970,7 +966,13 @@ body:not(.readonly) .profile-pfp-edit{display:flex;}
   <button class="nav-btn on" data-page="log"><span class="nav-ico">📋</span>Log</button>
   <button class="nav-btn" data-page="watchlist"><span class="nav-ico">🔖</span>Watchlist</button>
   <button class="nav-btn" data-page="favs"><span class="nav-ico">❤️</span>Favourites</button>
-  <button class="nav-btn" data-page="profile"><span class="nav-ico">👤</span>Profile</button>
+  <button class="nav-btn" data-page="profile" id="profileNavBtn">
+    <span class="nav-ico nav-avatar-wrap">
+      <img class="nav-avatar-img" id="navAvatarImg" src="" alt="" style="display:none">
+      <span class="nav-avatar-ph" id="navAvatarPh">👤</span>
+    </span>
+    Profile
+  </button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -1868,10 +1870,16 @@ function savePfp(url){
 function getDisplayName(){ return currentUser ? (currentUser.displayName||currentUser.email?.split('@')[0]||'You') : 'Aditya'; }
 
 function updateHeaderAvatar(pfp, name){
-  const img = document.getElementById('headerAvatar');
-  const ph  = document.getElementById('headerAvatarPh');
-  if(pfp){ img.src=pfp; img.style.display='block'; ph.style.display='none'; }
-  else{ img.style.display='none'; ph.style.display='flex'; ph.textContent=(name||'A')[0].toUpperCase(); }
+  // Nav profile tab avatar
+  const navImg = document.getElementById('navAvatarImg');
+  const navPh  = document.getElementById('navAvatarPh');
+  if(pfp && navImg){
+    navImg.src=pfp; navImg.style.display='block';
+    if(navPh) navPh.style.display='none';
+  } else {
+    if(navImg) navImg.style.display='none';
+    if(navPh){ navPh.style.display=''; navPh.textContent='👤'; }
+  }
 }
 
 // Load profile data from Firestore for current user
