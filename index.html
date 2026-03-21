@@ -79,7 +79,7 @@ body::before{content:none}
 
 /* ── LOGO ────────────────────────────────────── */
 .logo-wrap{display:flex;align-items:center;gap:10px;line-height:1}
-.logo-img{height:36px;object-fit:contain;display:block;}
+.logo-img{height:32px;object-fit:contain;display:block;}
 .logo-page-title{
   font-family:'Inter',sans-serif;font-weight:200;font-size:14px;
   letter-spacing:5px;text-transform:uppercase;color:var(--text3);
@@ -584,70 +584,69 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 
 /* ── SHARE CARD (the actual card to screenshot) ── */
 .share-card{
-  width:100%;border-radius:20px;overflow:hidden;
-  background:#1e1e1e;
-  box-shadow:0 20px 60px rgba(0,0,0,0.7);
-  font-family:Inter,sans-serif;
+  width:100%;border-radius:24px;overflow:hidden;
+  background:#161616;
+  box-shadow:0 24px 80px rgba(0,0,0,0.8);
+  font-family:'Inter',sans-serif;
+  position:relative;
 }
+/* blurred background poster */
+.sc-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center;
+  filter:blur(32px) brightness(0.25) saturate(1.4);
+  transform:scale(1.1);
+}
+.sc-content{position:relative;z-index:1;padding:20px;}
+.sc-top-row{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
 .sc-poster-wrap{
-  position:relative;width:100%;
-  aspect-ratio:4/3;overflow:hidden;background:#2a2a2a;
+  width:72px;height:106px;border-radius:10px;
+  overflow:hidden;background:#2a2a2a;flex-shrink:0;
+  box-shadow:0 8px 24px rgba(0,0,0,0.6);
 }
 .sc-poster{width:100%;height:100%;object-fit:cover;display:block;}
-.sc-poster-gradient{
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.6) 100%);
-}
 .sc-poster-ph{
-  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-  font-size:80px;background:#2a2a2a;
+  width:100%;height:100%;display:flex;align-items:center;
+  justify-content:center;font-size:28px;background:#2a2a2a;
 }
+.sc-poster-gradient{display:none;}
 .sc-rating-badge{
-  position:absolute;top:14px;right:14px;
-  padding:8px 14px;border-radius:12px;
-  font-size:15px;font-weight:900;letter-spacing:0.3px;
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  display:inline-flex;align-items:center;
+  padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:800;letter-spacing:0.3px;
+  margin-bottom:8px;
 }
-.sc-body{padding:18px 20px 20px;background:#1e1e1e;}
+.sc-info{flex:1;min-width:0;}
 .sc-meta{
-  font-size:11px;color:#888;letter-spacing:1.5px;
-  text-transform:uppercase;margin-bottom:10px;
-  display:flex;align-items:center;gap:6px;
+  font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:6px;
+  display:flex;align-items:center;gap:5px;
 }
 .sc-title{
-  font-size:26px;font-weight:800;color:#f0f0f0;
-  line-height:1.15;margin-bottom:12px;
+  font-size:18px;font-weight:800;color:#f0f0f0;
+  line-height:1.2;margin-bottom:10px;
 }
 .sc-rating-word{
   display:inline-flex;align-items:center;
-  font-size:13px;font-weight:800;
-  padding:5px 14px;border-radius:20px;margin-bottom:14px;
+  font-size:11px;font-weight:800;
+  padding:4px 12px;border-radius:20px;
   letter-spacing:0.3px;
 }
 .sc-note{
-  font-size:13px;color:#aaa;line-height:1.6;
-  border-left:3px solid #444;padding-left:12px;
-  margin-bottom:16px;font-style:italic;
+  font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6;
+  border-left:2px solid rgba(255,255,255,0.15);padding-left:10px;
+  margin-bottom:0;font-style:italic;
   display:none;
 }
 .sc-note.show{display:block;}
+.sc-divider{height:1px;background:rgba(255,255,255,0.08);margin:14px 0;}
 .sc-footer{
   display:flex;align-items:center;justify-content:space-between;
-  border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;
-  margin-top:4px;
 }
-.sc-name{font-size:14px;font-weight:700;color:#f0f0f0;}
-.sc-brand{font-size:11px;color:#666;margin-top:2px;}
-.sc-logo-wrap{display:flex;align-items:center;gap:3px;}
-.sc-logo-l{
-  font-family:'Playfair Display',serif;font-style:italic;
-  font-size:28px;color:#f0f0f0;line-height:1;
-}
-.sc-logo-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:#2d7ff9;margin-left:2px;margin-top:10px;
-}
+.sc-name{font-size:13px;font-weight:700;color:#f0f0f0;}
+.sc-brand{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;}
+.sc-logo-wrap{display:flex;align-items:center;}
+.sc-logo-img{height:18px;object-fit:contain;opacity:0.7;}
 
 /* share actions */
 .share-actions{display:flex;gap:10px;width:100%;}
@@ -1351,23 +1350,30 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 <div class="share-overlay" id="shareOverlay">
   <div class="share-wrap">
     <div class="share-card" id="shareCard">
-      <div class="sc-poster-wrap">
-        <img class="sc-poster" id="scPoster" src="" alt="">
-        <div class="sc-poster-gradient"></div>
-        <div class="sc-poster-ph" id="scPosterPh"></div>
-        <div class="sc-rating-badge" id="scRatingBadge"></div>
-      </div>
-      <div class="sc-body">
-        <div class="sc-meta" id="scMeta"></div>
-        <div class="sc-title" id="scTitle"></div>
-        <div class="sc-rating-word" id="scRatingWord"></div>
+      <div class="sc-bg" id="scBg"></div>
+      <div class="sc-content">
+        <div class="sc-top-row">
+          <div class="sc-poster-wrap">
+            <img class="sc-poster" id="scPoster" src="" alt="">
+            <div class="sc-poster-ph" id="scPosterPh" style="display:none"></div>
+          </div>
+          <div class="sc-info">
+            <div class="sc-meta" id="scMeta"></div>
+            <div class="sc-title" id="scTitle"></div>
+            <span class="sc-rating-badge" id="scRatingBadge"></span>
+            <span class="sc-rating-word" id="scRatingWord"></span>
+          </div>
+        </div>
         <div class="sc-note" id="scNote"></div>
+        <div class="sc-divider"></div>
         <div class="sc-footer">
           <div>
             <div class="sc-name" id="scName">Aditya</div>
             <div class="sc-brand">logged on FlickShelft •</div>
           </div>
-          <div class="sc-logo-wrap"><img src="logo.png" style="height:22px;object-fit:contain;"></div>
+          <div class="sc-logo-wrap">
+            <img src="logo.png" class="sc-logo-img" alt="FlickShelft">
+          </div>
         </div>
       </div>
     </div>
@@ -2173,49 +2179,45 @@ function openShareCard(){
   const overlay = document.getElementById('shareOverlay');
   const icon = entry.type==='game'?'🎮':entry.type==='movie'?'🎬':'📺';
   const rKey = RATINGS.includes(entry.rating)?entry.rating:'decent';
-  // Set name dynamically
+
   document.getElementById('scName').textContent = getDisplayName();
 
-  // Poster
+  // Blurred background
+  const bg = document.getElementById('scBg');
+  if(entry.poster) bg.style.backgroundImage = `url(${entry.poster})`;
+  else bg.style.backgroundImage = 'none';
+
+  // Small poster
   const poster = document.getElementById('scPoster');
   const ph = document.getElementById('scPosterPh');
   if(entry.poster){
-    poster.src = entry.poster;
-    poster.style.display='block';
-    ph.style.display='none';
+    poster.src=entry.poster; poster.style.display='block'; ph.style.display='none';
   } else {
-    poster.style.display='none';
-    ph.style.display='flex';
-    ph.textContent=icon;
+    poster.style.display='none'; ph.style.display='flex'; ph.textContent=icon;
   }
 
-  // Rating badge (top right of poster)
+  // Rating badge
   const badge = document.getElementById('scRatingBadge');
   badge.textContent = RATING_LABELS[rKey];
   badge.style.background = RATING_BG[rKey];
   badge.style.color = RATING_COLOURS[rKey];
 
-  // Meta — icon · genre · year
-  document.getElementById('scMeta').innerHTML =
-    `<span>${icon}</span>${[entry.genre, entry.year].filter(Boolean).map(x=>`<span>${x.toUpperCase()}</span>`).join('<span style="color:#555">·</span>')}`;
-
-  // Title
-  document.getElementById('scTitle').textContent = entry.title;
-
-  // Rating word pill
+  // Rating word
   const rWord = document.getElementById('scRatingWord');
   rWord.textContent = RATING_LABELS[rKey];
   rWord.style.background = RATING_BG[rKey];
   rWord.style.color = RATING_COLOURS[rKey];
 
+  // Meta
+  document.getElementById('scMeta').innerHTML =
+    `<span>${icon}</span>${[entry.genre,entry.year].filter(Boolean).map(x=>`<span>${x.toUpperCase()}</span>`).join('<span style="color:rgba(255,255,255,0.2)"> · </span>')}`;
+
+  document.getElementById('scTitle').textContent = entry.title;
+
   // Note
   const noteEl = document.getElementById('scNote');
-  if(entry.notes){
-    noteEl.textContent = '"' + entry.notes + '"';
-    noteEl.classList.add('show');
-  } else {
-    noteEl.classList.remove('show');
-  }
+  if(entry.notes){ noteEl.textContent='"'+entry.notes+'"'; noteEl.classList.add('show'); }
+  else { noteEl.classList.remove('show'); }
 
   overlay.classList.add('show');
 }
@@ -2677,10 +2679,16 @@ function showInfoCard(entry, context){
   actions.innerHTML = '';
   if(context==='logged' && isLogged){
     const editBtn = document.createElement('button');
-    editBtn.className='info-edit-btn';
-    editBtn.textContent='✏️ Edit Entry';
+    editBtn.className='info-wl-btn';
+    editBtn.textContent='✏️ Edit';
     editBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>openEdit(entry.id),150); };
     actions.appendChild(editBtn);
+    const shareBtn = document.createElement('button');
+    shareBtn.className='info-edit-btn';
+    shareBtn.style.flex='2';
+    shareBtn.textContent='🔗 Share Review';
+    shareBtn.onclick=()=>{ closeInfoCard(); editId=entry.id; setTimeout(()=>openShareCard(),150); };
+    actions.appendChild(shareBtn);
   }
   if(context==='watchlist'){
     const removeBtn = document.createElement('button');
