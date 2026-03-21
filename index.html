@@ -2552,13 +2552,12 @@ function renderProfile(){
   const movies = DATA.filter(x=>x.type==='movie').length;
   const series = DATA.filter(x=>x.type==='series').length;
   const games  = DATA.filter(x=>x.type==='game').length;
-  const statsTotal  = DATA.length || 1;
-  const favs   = DATA.filter(x=>x.fav).length;
-  const peaks  = DATA.filter(x=>x.rating==='peak').length;
-  const skips  = DATA.filter(x=>x.rating==='skip').length;
-  const excellent = DATA.filter(x=>x.rating==='excellent').length;
-  const decent = DATA.filter(x=>x.rating==='decent').length;
-  const mediocre = DATA.filter(x=>x.rating==='mediocre').length;
+  const statsTotal = DATA.length || 1;
+  const statsFavs  = DATA.filter(x=>x.fav).length;
+  const skips      = DATA.filter(x=>x.rating==='skip').length;
+  const excellent  = DATA.filter(x=>x.rating==='excellent').length;
+  const decent     = DATA.filter(x=>x.rating==='decent').length;
+  const mediocre   = DATA.filter(x=>x.rating==='mediocre').length;
 
   // Genres
   const genres = {};
@@ -2618,7 +2617,7 @@ function renderProfile(){
     + '<div class="pstat-big" style="border-color:var(--red)"><div class="pstat-val" style="color:var(--red)">'+movies+'</div><div class="pstat-lbl">Films</div></div>'
     + '<div class="pstat-big" style="border-color:var(--teal)"><div class="pstat-val" style="color:var(--teal)">'+series+'</div><div class="pstat-lbl">Series</div></div>'
     + '<div class="pstat-big" style="border-color:var(--green)"><div class="pstat-val" style="color:var(--green)">'+games+'</div><div class="pstat-lbl">Games</div></div>'
-    + '<div class="pstat-big" style="border-color:var(--pink)"><div class="pstat-val" style="color:var(--pink)">'+favs+'</div><div class="pstat-lbl">Favs</div></div>'
+    + '<div class="pstat-big" style="border-color:var(--pink)"><div class="pstat-val" style="color:var(--pink)">'+statsFavs+'</div><div class="pstat-lbl">Favs</div></div>'
     + '</div>';
 
   // Row 2: donut + ratings
