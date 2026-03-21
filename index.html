@@ -889,6 +889,9 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
   border-bottom:1px solid var(--border2);
   margin-bottom:10px;
 }
+.profile-section-hdr-sticky{
+  position:sticky;top:0;z-index:10;
+}
 .profile-section-title{
   font-size:10px;font-weight:700;color:var(--text2);
   text-transform:uppercase;letter-spacing:1.2px;
@@ -1162,9 +1165,17 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
     </div>
   </div>
 
+  <!-- STATS -->
+  <div class="profile-section">
+    <div class="profile-section-hdr profile-section-hdr-sticky">
+      <span class="profile-section-title">Stats</span>
+    </div>
+    <div class="profile-stats" id="profileStats"></div>
+  </div>
+
   <!-- TOP PICKS -->
   <div class="profile-section">
-    <div class="profile-section-hdr">
+    <div class="profile-section-hdr profile-section-hdr-sticky">
       <span class="profile-section-title">Top Picks</span>
       <button class="profile-edit-btn" id="editPicksBtn" style="display:none">Edit</button>
     </div>
@@ -1173,18 +1184,10 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
   <!-- RECENT ACTIVITY -->
   <div class="profile-section">
-    <div class="profile-section-hdr">
+    <div class="profile-section-hdr profile-section-hdr-sticky">
       <span class="profile-section-title">Recent Activity</span>
     </div>
     <div class="profile-grid" id="recentGrid"></div>
-  </div>
-
-  <!-- STATS -->
-  <div class="profile-section">
-    <div class="profile-section-hdr">
-      <span class="profile-section-title">Stats</span>
-    </div>
-    <div class="profile-stats" id="profileStats"></div>
   </div>
 
   <div class="list-footer">made with love by Aditya ♥️</div>
