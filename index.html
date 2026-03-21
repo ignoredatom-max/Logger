@@ -2536,10 +2536,10 @@ function renderProfile(){
   updateHeaderAvatar(pfp, name);
   updateProfileShareBtn();
 
-  const total = DATA.length;
+  const totalEntries = DATA.length;
   const peaks = DATA.filter(x=>x.rating==='peak').length;
   document.getElementById('profileSub').textContent =
-    total ? `${total} logged · ${peaks} peaks` : 'nothing logged yet';
+    totalEntries ? `${totalEntries} logged · ${peaks} peaks` : 'nothing logged yet';
 
   renderTopPicks();
 
@@ -2552,7 +2552,7 @@ function renderProfile(){
   const movies = DATA.filter(x=>x.type==='movie').length;
   const series = DATA.filter(x=>x.type==='series').length;
   const games  = DATA.filter(x=>x.type==='game').length;
-  const total  = DATA.length || 1;
+  const statsTotal  = DATA.length || 1;
   const favs   = DATA.filter(x=>x.fav).length;
   const peaks  = DATA.filter(x=>x.rating==='peak').length;
   const skips  = DATA.filter(x=>x.rating==='skip').length;
@@ -2636,7 +2636,7 @@ function renderProfile(){
     + '<div class="pstat-card"><div class="pstat-card-title">Type split</div>'
     + '<div style="display:flex;align-items:center;gap:12px">'
     + '<svg width="100" height="100" viewBox="0 0 100 100">'+donutSVG
-    + '<text x="50" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text)">'+total+'</text></svg>'
+    + '<text x="50" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text)">'+statsTotal+'</text></svg>'
     + '<div style="display:flex;flex-direction:column;gap:7px;font-size:11px">'
     + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--red);flex-shrink:0"></div><span style="color:var(--text2)">Films <b style="color:var(--text)">'+movies+'</b></span></div>'
     + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--teal);flex-shrink:0"></div><span style="color:var(--text2)">Series <b style="color:var(--text)">'+series+'</b></span></div>'
