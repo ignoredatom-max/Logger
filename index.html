@@ -583,7 +583,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 /* ── SHARE CARD (the actual card to screenshot) ── */
 .share-card{
   width:100%;border-radius:24px;overflow:hidden;
-  background:#161616;
+  background:transparent;
   box-shadow:0 24px 80px rgba(0,0,0,0.8);
   font-family:'Inter',sans-serif;
   position:relative;
@@ -592,8 +592,13 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .sc-bg{
   position:absolute;inset:0;
   background-size:cover;background-position:center;
-  filter:blur(32px) brightness(0.25) saturate(1.4);
-  transform:scale(1.1);
+  filter:blur(28px) brightness(0.55) saturate(2);
+  transform:scale(1.15);
+}
+/* slight dark overlay so text is readable */
+.sc-bg::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(0,0,0,0.3);
 }
 .sc-content{position:relative;z-index:1;padding:20px;}
 .sc-top-row{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
@@ -2234,156 +2239,71 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
   btn.textContent = '⏳ Generating…';
   btn.disabled = true;
   try{
+    const card = document.getElementById('shareCard');
     const entry = DATA.find(x=>x.id===editId);
-    const rKey = RATINGS.includes(entry?.rating)?entry.rating:'decent';
-    const COLOURS = {skip:'#ff453a',mediocre:'#ff9f0a',decent:'#00b4d8',excellent:'#00c566',peak:'#bf5af2'};
-    const BGCOLOURS = {skip:'rgba(255,69,58,0.22)',mediocre:'rgba(255,159,10,0.22)',decent:'rgba(0,180,216,0.22)',excellent:'rgba(0,197,102,0.22)',peak:'rgba(191,90,242,0.22)'};
-    const icon = entry?.type==='game'?'🎮':entry?.type==='movie'?'🎬':'📺';
 
-    const W = 1080, H = 1080;
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
+    // Temporarily make bg visible for canvas capture
+    const bg = document.getElementById('scBg');
+    const origFilter = bg.style.filter;
+    // html2canvas can't do CSS blur — draw blurred bg manually then overlay html2canvas
+    const rect = card.getBoundingClientRect();
+    const scale = 3;
+    const W = Math.round(rect.width * scale);
+    const H = Math.round(rect.height * scale);
 
-    // Draw blurred poster as background
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = W; finalCanvas.height = H;
+    const ctx = finalCanvas.getContext('2d');
+
+    // 1. Draw blurred bg poster manually
     if(entry?.poster){
       await new Promise(res=>{
         const img = new Image();
         img.crossOrigin='anonymous';
-        img.onload = ()=>{
-          // Fill canvas with stretched poster
-          ctx.filter='blur(40px) brightness(0.3) saturate(1.5)';
-          ctx.drawImage(img, -60, -60, W+120, H+120);
-          ctx.filter='none';
-          res();
-        };
-        img.onerror = res;
-        img.src = entry.poster;
-      });
-    } else {
-      ctx.fillStyle = '#161616';
-      ctx.fillRect(0,0,W,H);
-    }
-
-    // Dark overlay for readability
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(0,0,W,H);
-
-    // Card rounded rect background
-    const pad = 60;
-    const cw = W - pad*2, ch = H - pad*2;
-    const cr = 48;
-    ctx.fillStyle = 'rgba(18,18,18,0.72)';
-    roundRect(ctx, pad, pad, cw, ch, cr);
-    ctx.fill();
-
-    // Small poster top-left inside card
-    const px = pad+48, py = pad+48;
-    const pw = 220, ph2 = 320;
-    if(entry?.poster){
-      await new Promise(res=>{
-        const img2 = new Image();
-        img2.crossOrigin='anonymous';
-        img2.onload = ()=>{
+        img.onload=()=>{
           ctx.save();
-          roundRect(ctx, px, py, pw, ph2, 20);
+          // rounded rect clip
+          const r = 24*scale;
+          ctx.beginPath();
+          ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
+          ctx.lineTo(W,H-r); ctx.quadraticCurveTo(W,H,W-r,H);
+          ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
+          ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
           ctx.clip();
-          ctx.drawImage(img2, px, py, pw, ph2);
+          ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
+          ctx.drawImage(img,-80,-80,W+160,H+160);
+          ctx.filter='none';
+          // dark overlay
+          ctx.fillStyle='rgba(0,0,0,0.3)';
+          ctx.drawImage(img,-80,-80,W+160,H+160);
+          ctx.filter='none';
+          // dark overlay
+          ctx.fillStyle='rgba(0,0,0,0.28)';
+          ctx.fillRect(0,0,W,H);
           ctx.restore();
           res();
         };
-        img2.onerror = res;
-        img2.src = entry.poster;
+        img.onerror=res;
+        img.src=entry.poster;
       });
     } else {
-      ctx.fillStyle = '#2a2a2a';
-      ctx.save(); roundRect(ctx,px,py,pw,ph2,20); ctx.fill(); ctx.restore();
-      ctx.font = '100px serif'; ctx.textAlign='center';
-      ctx.fillText(icon, px+pw/2, py+ph2/2+36);
+      ctx.fillStyle='#161616';
+      ctx.fillRect(0,0,W,H);
     }
 
-    // Text area
-    const tx = px + pw + 48;
-    const tw = cw - pw - 48*3;
-
-    // Meta
-    ctx.font = '600 32px Inter, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.textAlign = 'left';
-    const meta = [icon, entry?.genre?.split(',')[0], entry?.year].filter(Boolean).join('  ·  ');
-    ctx.fillText(meta, tx, py + 48);
-
-    // Title
-    ctx.font = 'bold 68px Inter, sans-serif';
-    ctx.fillStyle = '#f0f0f0';
-    const words = (entry?.title||'').split(' ');
-    let line='', titleY = py+120, lineH=82;
-    for(const word of words){
-      const test = line+word+' ';
-      if(ctx.measureText(test).width > tw && line){
-        ctx.fillText(line.trim(), tx, titleY); titleY+=lineH; line='';
-      }
-      line+=word+' ';
-      if(titleY > py+300) break;
-    }
-    if(line) ctx.fillText(line.trim(), tx, titleY); titleY+=lineH+16;
-
-    // Rating pill
-    const pillLabel = RATING_LABELS[rKey];
-    const pillW = ctx.measureText(pillLabel).width + 60;
-    ctx.fillStyle = BGCOLOURS[rKey];
-    ctx.beginPath();
-    ctx.roundRect(tx, titleY, pillW, 58, 29);
-    ctx.fill();
-    ctx.font = 'bold 30px Inter, sans-serif';
-    ctx.fillStyle = COLOURS[rKey];
-    ctx.textAlign='center';
-    ctx.fillText(pillLabel, tx + pillW/2, titleY+38);
-    ctx.textAlign='left';
-
-    // Note
-    if(entry?.notes){
-      const noteY = Math.max(titleY+80, py+ph2+40);
-      ctx.strokeStyle='rgba(255,255,255,0.15)';
-      ctx.lineWidth=4;
-      ctx.beginPath(); ctx.moveTo(pad+48, noteY); ctx.lineTo(pad+48, noteY+100); ctx.stroke();
-      ctx.font='italic 30px Inter, sans-serif';
-      ctx.fillStyle='rgba(255,255,255,0.5)';
-      const note = '"'+entry.notes+'"';
-      ctx.fillText(note.length>60?note.slice(0,57)+'…':note, pad+70, noteY+52);
-    }
-
-    // Divider
-    const divY = H - pad - 130;
-    ctx.strokeStyle='rgba(255,255,255,0.1)';
-    ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(pad+48,divY); ctx.lineTo(W-pad-48,divY); ctx.stroke();
-
-    // Footer — name
-    ctx.font='bold 36px Inter, sans-serif';
-    ctx.fillStyle='#f0f0f0';
-    ctx.textAlign='left';
-    ctx.fillText(getDisplayName(), pad+48, divY+72);
-    ctx.font='28px Inter, sans-serif';
-    ctx.fillStyle='rgba(255,255,255,0.28)';
-    ctx.fillText('logged on FlickShelft', pad+48, divY+108);
-
-    // Footer logo — draw logo image
-    await new Promise(res=>{
-      const logoImg = new Image();
-      logoImg.onload=()=>{
-        const lh=50, lw=logoImg.width*(lh/logoImg.height);
-        ctx.globalAlpha=0.5;
-        ctx.drawImage(logoImg, W-pad-48-lw, divY+50, lw, lh);
-        ctx.globalAlpha=1;
-        res();
-      };
-      logoImg.onerror=res;
-      logoImg.src='logo.png';
+    // 2. Capture the card HTML on top (without bg blur)
+    bg.style.display='none';
+    const htmlCanvas = await html2canvas(card,{
+      backgroundColor:null, scale, useCORS:true, allowTaint:true, logging:false,
+      width:rect.width, height:rect.height
     });
+    bg.style.display='';
+
+    // 3. Composite HTML on top of blurred bg
+    ctx.drawImage(htmlCanvas,0,0);
 
     const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/jpeg', 0.92);
+    a.href = finalCanvas.toDataURL('image/jpeg',0.95);
     a.download = `flickshelft-${(entry?.title||'card').replace(/\s+/g,'-').toLowerCase()}.jpg`;
     a.click();
     toast('✅ Card saved!');
@@ -2397,17 +2317,12 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
 
 function roundRect(ctx, x, y, w, h, r){
   ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y);
-  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
-  ctx.lineTo(x+w, y+h-r);
-  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-  ctx.lineTo(x+r, y+h);
-  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
-  ctx.lineTo(x, y+r);
-  ctx.quadraticCurveTo(x, y, x+r, y);
-  ctx.closePath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
 }
+
 // Boot — show cache instantly, Firebase syncs in background
 const _bootCache = cacheRead();
 DATA = _bootCache || [];
