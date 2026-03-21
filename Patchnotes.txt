@@ -1,0 +1,241 @@
+FLICKSHELFT — Patch Notes
+Personal Media Diary by Aditya
+————————————————————————————————————————
+
+
+1.9.0
+22 March 2026
+
+  - Profile stats completely redesigned — cleaner, less colourful
+  - Numbers in a single segmented dark row, no coloured borders
+  - Rating bars keep accent colours but muted at 75% opacity
+  - Activity bars in neutral grey, genre bars fade uniformly
+  - Section order changed to Top Picks → Stats → Recent Activity
+  - Section headers now stick as you scroll through profile
+  - Mini sticky header wiggle fixed — no more feedback loop
+  - Mini header no longer flashes when switching to Profile tab
+  - Watchlist header height reduced to match other pages
+  - Switching any tab now resets scroll position to top
+  - Scrolling one tab no longer affects scroll of other tabs
+
+
+1.8.1
+22 March 2026
+
+  - Sticky headers on all pages — logo, filters and search all stick
+  - Log: header + filter bar + Add button stick together as one block
+  - Watchlist: header + search bar stick together with separator
+  - Favourites: header + filter tabs stick together with separator
+  - Month separators in Log stick below the sticky header block
+  - All sticky headers have solid background — no blur, clean edge
+  - Readonly banner moved to top of screen — no longer hidden behind nav
+  - Gap between sticky header and month separator fixed
+  - Watchlist search and subtitle spacing fixed — no more overlap
+  - Profile empty space above pfp reduced
+
+
+1.8.0
+21 March 2026
+
+  - Floating nav bar — lifted off bottom edge, rounded corners
+  - Blur behind nav bar (backdrop-filter)
+  - Border radius matches rest of UI elements
+  - PWA install prompt shown to new visitors after 3 seconds
+  - Dismissed for 7 days if tapped X, never shown if already installed
+  - Profile mini sticky header — scroll past pfp and name collapses
+    into a compact horizontal header showing pfp + name side by side
+  - Scrolling back up hides it again smoothly
+
+
+1.7.2
+21 March 2026
+
+  - Share card completely redesigned
+  - Blurred poster fills entire card background
+  - Small poster thumbnail top left, info beside it
+  - Rating shown once as a pill — fixed double rating bug
+  - Note shown as italic quote with left border
+  - FlickShelft logo at footer of card
+  - Share card name now shows your custom display name not hardcoded
+  - Downloaded image now matches what you see — canvas draws blur
+    manually so save works correctly
+  - Share Review button added to info card in Log tab
+    — no need to open edit modal first
+  - Profile picks stored as full entry objects in Firestore
+    — visitors see your picks even if not in their local cache
+
+
+1.7.1
+21 March 2026
+
+  - Renamed app from Logger to FlickShelft
+  - New wordmark — Poppins Bold, F white, lick grey, S bold, helft dim,
+    blue dot at the end. High resolution for crisp display
+  - New app icon — dark rounded square, fs lowercase Poppins Light,
+    f white, s blue, thin blue underline
+  - App title, browser tab, share card all say FlickShelft
+  - Internal code and Firebase remain as Logger
+  - TMDB and RAWG attribution added to Settings sheet with tappable links
+  - TMDB link also added in search modal
+  - Favourites subtitle personalised — shows Stuff [Name] loved
+    when viewing someone elses diary
+
+
+1.7.0
+21 March 2026
+
+  - Shareable profile links via ?u=UID in URL
+  - Plain link shows tutorial page for new visitors with sign in button
+  - Tutorial footer says made with ♥️ by Aditya
+  - ?u=UID shows that persons public diary read-only
+  - Profile tab has Copy my link button (top right, signed in only)
+  - Firestore rules updated — meta/profile now publicly readable
+    so pfp, picks and name all load for visitors
+  - Custom display name — tap your name in Profile to edit inline
+    saves to Firestore, visitors see your custom name
+  - PFP compressed to 200x200 before saving — no Firestore size issues
+  - Loading skeleton shown while public diary loads for first-time visitors
+  - Cache now per-user keyed — no data bleed between accounts
+  - Readonly banner personalised for any user not just Aditya
+
+
+1.6.0
+20 March 2026
+
+  - Season tracker for series
+  - Season picker appears when logging a series with Finished status
+  - Shows all seasons from TMDB, tap to select up to last watched
+  - Pill in log shows Completed S3 instead of Finished
+  - Re-logging same series pre-fills seasons from your last entry
+  - Season picker hides for Watching, Dropped, Want to statuses
+  - Info card — tap any title to see full details
+  - Shows poster, genre, year, TMDB or RAWG score
+  - Fetches overview, director, cast, runtime, seasons, platforms live
+  - Edit Entry button only in Log tab, not Favourites or Profile
+  - Share Review button in info card (Log tab only)
+  - Watchlist Log it and Remove buttons side by side
+  - Upcoming countdown cards open info card on tap
+  - Upcoming card backgrounds now blurred poster glassmorphism
+  - Watchlist type filter hidden by default, slides in on search focus
+  - Profile picks persist across refresh — saved to Firestore
+  - Seamless loading — cached data shows instantly, Firestore syncs
+    silently in background, no loading dialogue on startup
+  - Nav bar redesigned — active tab has blue label, cleaner look
+  - 7 bugs fixed including cache, delete, watchlist index, info card
+
+
+————————————————————————————————————————
+
+1.5.0
+16 March 2026
+
+  - Stats now live in the subtitle under the Logger wordmark
+  - Shows how many you logged this month and total count
+  - Numbers are bold, fits in one line, doesn't feel out of place
+  - Subtitle goes back to "Aditya's personal media diary" when empty
+  - Fixed: going back to Log from Favourites no longer hides your entries
+  - Fixed: Log filter now resets to All when switching pages
+
+
+1.4.0
+14 March 2026
+
+  - Added share cards
+  - Tap any entry → edit → Share Card button appears at the bottom
+  - Card shows the poster, title, your rating, your note, Logger branding
+  - Rating colours match the app — Peak is purple, Excellent is green, etc.
+  - Tap Save Image to download as a PNG — crisp enough for stories
+  - Share button only shows on existing entries, not when adding new ones
+
+
+1.3.1
+14 March 2026
+
+  - Month headers are now a lighter shade of grey so they actually stand out
+  - "Done" is gone — it's now Watched, Finished, or Completed depending on type
+  - Type icon now appears before the rating badge on every row
+  - Rewatched tag is now indigo — was blue which clashed with other things
+  - Status dropdown in the add/edit modal updated to match
+
+
+1.3.0
+13 March 2026
+
+  - Your diary is now public — anyone with the link can see your log
+  - Visitors get a read-only view, no buttons, no editing, nothing
+  - Banner shown to visitors: "Viewing Aditya's diary — read only"
+  - Sign in with your own Google account and you get your own private diary
+  - Firestore rules updated so entries are readable by anyone but only
+    writable by you
+
+
+1.2.1
+13 March 2026
+
+  - Removed the blue tint from every background colour
+  - Everything is proper neutral grey now — #1a1a1a base
+  - Background glow gradient is gone
+  - App icon added — italic L with blue dot, dark grey rounded background
+  - Two sizes: 192×192 and 512×512
+  - manifest.json updated to use the real PNG icons
+
+
+1.2.0
+13 March 2026
+
+  - Switched storage from IndexedDB + localStorage to Firebase
+  - Sign in with Google — your data follows you everywhere
+  - Every save, edit and delete syncs instantly to Firestore
+  - Small ☁️ flashes in the corner to confirm each sync
+  - Removed Google Drive sync
+  - Removed the weekly backup reminder banner
+  - Removed the localStorage compression system
+  - Kept manual JSON download and restore — still in Settings
+  - Settings sheet now has Sign in with Google instead of Drive
+
+
+1.1.1
+11 March 2026
+
+  - Rating slider labels now align properly
+  - Reduced header padding — was wasting space
+  - Watching tag is mint now, not teal
+  - Dropped tag is pink now — red was already used for Skip rating
+  - Adding something you already logged now tags it as Rewatched
+    instead of creating a duplicate entry
+  - Filter tab order locked to Films → Series → Games everywhere
+
+
+1.1.0
+11 March 2026
+
+  - Renamed from Vault to Logger
+  - New wordmark — italic L, thin OGGER, small blue dot
+  - Rebuilt the list layout to match Letterboxd exactly
+  - Tight row spacing, day number, poster thumbnail, gradient title fade
+  - Type colour bar moved to the right edge of each row
+  - Month group headers added, sticky at top while scrolling
+  - Tapping a row opens the edit modal
+  - Heart and delete buttons work independently without opening modal
+  - Log it on watchlist now removes the item after logging
+  - Animations added throughout — rows stagger in, counts pulse
+  - Settings sheet added behind the gear icon
+  - "made with love by Aditya ♥️" footer on every list
+  - Removed all seed data — starts blank
+
+
+1.0.0
+11 March 2026
+
+  - First version
+  - Log films, series and games
+  - TMDB for movie and series search
+  - RAWG for game search
+  - 5 ratings: Skip, Mediocre, Decent, Excellent, Peak
+  - Watchlist and Favourites pages
+  - Backup and restore via JSON
+  - Installable on Android as a PWA
+
+
+————————————————————————————————————————
+made with love by Aditya ♥️
