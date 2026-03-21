@@ -432,7 +432,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .tmdb-attr{font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:0.2px}
 
 /* ── WATCHLIST ────────────────────────────────── */
-.wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;background:rgba(26,26,26,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;background:var(--bg)}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px;overflow:hidden;max-height:0;opacity:0;transition:max-height 0.25s ease,opacity 0.2s ease,margin 0.25s ease;margin-bottom:0;}
 .wl-type-bar.show{max-height:48px;opacity:1;margin-bottom:10px;}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px}
@@ -1019,49 +1019,67 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- LOG PAGE -->
 <div class="page on" id="page-log">
-  <div class="header">
-    <div>
-      <div class="logo-wrap">
-        <img src="logo.png" class="logo-img" alt="FlickShelft">
+  <div style="position:sticky;top:0;z-index:91;background:var(--bg)">
+    <div class="header" style="position:relative">
+      <div>
+        <div class="logo-wrap">
+          <img src="logo.png" class="logo-img" alt="FlickShelft">
+        </div>
+        <div class="header-sub" id="headerSub">personal media diary</div>
       </div>
-      <div class="header-sub" id="headerSub">personal media diary</div>
-    </div>
-    <div style="display:flex;align-items:flex-start;gap:14px">
-      <div style="display:flex;gap:12px">
-        <div class="count-item m"><div class="count-num" id="cm">0</div><div class="count-label">Films</div></div>
-        <div class="count-item s"><div class="count-num" id="cs">0</div><div class="count-label">Series</div></div>
-        <div class="count-item g"><div class="count-num" id="cg">0</div><div class="count-label">Games</div></div>
+      <div style="display:flex;align-items:flex-start;gap:14px">
+        <div style="display:flex;gap:12px">
+          <div class="count-item m"><div class="count-num" id="cm">0</div><div class="count-label">Films</div></div>
+          <div class="count-item s"><div class="count-num" id="cs">0</div><div class="count-label">Series</div></div>
+          <div class="count-item g"><div class="count-num" id="cg">0</div><div class="count-label">Games</div></div>
+        </div>
+        <button class="settings-btn" id="settingsBtn">⚙︎</button>
       </div>
-      <button class="settings-btn" id="settingsBtn">⚙︎</button>
     </div>
-  </div>
-  <div class="toolbar">
-    <div class="seg">
-      <button class="seg-btn on" data-f="all">All</button>
-      <button class="seg-btn" data-f="movie">🎬</button>
-      <button class="seg-btn" data-f="series">📺</button>
-      <button class="seg-btn" data-f="game">🎮</button>
+    <div class="toolbar" style="position:relative;border-bottom:1px solid var(--border)">
+      <div class="seg">
+        <button class="seg-btn on" data-f="all">All</button>
+        <button class="seg-btn" data-f="movie">🎬</button>
+        <button class="seg-btn" data-f="series">📺</button>
+        <button class="seg-btn" data-f="game">🎮</button>
+      </div>
+      <select class="sort-sel" id="sortSel">
+        <option value="new">Newest</option>
+        <option value="old">Oldest</option>
+        <option value="rate">Rating</option>
+        <option value="az">A–Z</option>
+      </select>
+      <button class="add-btn" id="openBtn">+ Add</button>
     </div>
-    <select class="sort-sel" id="sortSel">
-      <option value="new">Newest</option>
-      <option value="old">Oldest</option>
-      <option value="rate">Rating</option>
-      <option value="az">A–Z</option>
-    </select>
-    <button class="add-btn" id="openBtn">+ Add</button>
   </div>
   <div class="list" id="list"></div>
 </div>
 
 <!-- WATCHLIST PAGE -->
 <div class="page" id="page-watchlist">
-  <div class="header" style="padding-top:14px;padding-bottom:0">
-    <div>
-      <div class="logo-wrap"><span class="logo-l">W</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">atchlist</span><div class="logo-dot"></div></div>
-      <div class="header-sub">Things to check out</div>
+  <div style="position:sticky;top:0;z-index:91;background:var(--bg)">
+    <div class="header" style="padding-top:14px;padding-bottom:0;position:relative">
+      <div>
+        <div class="logo-wrap"><span class="logo-l">W</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">atchlist</span><div class="logo-dot"></div></div>
+        <div class="header-sub">Things to check out</div>
+      </div>
+    </div>
+    <div class="wl-search-wrap" style="position:relative">
+      <div class="wl-type-bar">
+        <button class="wl-tsel on movie" data-wt="movie">🎬 Film</button>
+        <button class="wl-tsel" data-wt="series">📺 Series</button>
+        <button class="wl-tsel" data-wt="game">🎮 Game</button>
+      </div>
+      <div class="wl-search-row">
+        <div class="wl-search-box">
+          <input class="wl-inp" id="wlInp" placeholder="Search to add…" type="text" autocomplete="off">
+          <div class="wl-spin" id="wlSpin"></div>
+          <div class="wl-dropdown" id="wlDropdown"></div>
+        </div>
+        <button class="wl-add" id="wlAddBtn">Add</button>
+      </div>
     </div>
   </div>
-  <div class="wl-search-wrap">
     <div class="wl-type-bar">
       <button class="wl-tsel on movie" data-wt="movie">🎬 Film</button>
       <button class="wl-tsel" data-wt="series">📺 Series</button>
@@ -1088,18 +1106,20 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- FAVOURITES PAGE -->
 <div class="page" id="page-favs">
-  <div class="header" style="padding-top:16px;padding-bottom:12px">
-    <div>
-      <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
-      <div class="header-sub" id="favsSub">Stuff you loved ❤️</div>
+  <div style="position:sticky;top:0;z-index:91;background:var(--bg)">
+    <div class="header" style="padding-top:16px;padding-bottom:12px;position:relative">
+      <div>
+        <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
+        <div class="header-sub" id="favsSub">Stuff you loved ❤️</div>
+      </div>
     </div>
-  </div>
-  <div class="toolbar" style="padding-top:2px;position:sticky;top:0;z-index:90;background:rgba(26,26,26,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)">
-    <div class="seg">
-      <button class="seg-btn on" data-ff="all">All</button>
-      <button class="seg-btn" data-ff="movie">🎬</button>
-      <button class="seg-btn" data-ff="series">📺</button>
-      <button class="seg-btn" data-ff="game">🎮</button>
+    <div class="toolbar" style="padding-top:2px;position:relative;border-bottom:1px solid var(--border)">
+      <div class="seg">
+        <button class="seg-btn on" data-ff="all">All</button>
+        <button class="seg-btn" data-ff="movie">🎬</button>
+        <button class="seg-btn" data-ff="series">📺</button>
+        <button class="seg-btn" data-ff="game">🎮</button>
+      </div>
     </div>
   </div>
   <div class="fav-list-inner" id="fav-list"></div>
