@@ -836,16 +836,19 @@ body.readonly .row{cursor:default}
   position:sticky;top:0;z-index:91;
   background:var(--bg);
   display:flex;align-items:center;gap:12px;
-  padding:0 16px;
+  padding:10px 16px;
   border-bottom:1px solid var(--border);
-  max-height:0;overflow:hidden;
+  height:56px;
+  transform:translateY(-100%);
   opacity:0;
-  transition:max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+  transition:transform 0.22s ease, opacity 0.22s ease;
+  pointer-events:none;
+  margin-bottom:-56px;
 }
 .profile-mini-header.visible{
-  max-height:60px;
-  padding:10px 16px;
+  transform:translateY(0);
   opacity:1;
+  pointer-events:auto;
 }
 .profile-mini-pfp,.profile-mini-pfp-ph{
   width:36px;height:36px;border-radius:50%;
@@ -964,20 +967,18 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 .profile-card-add-ico{font-size:24px;}
 .profile-divider{height:1px;background:var(--border);margin:0 14px 4px;}
 .profile-stats{display:flex;flex-direction:column;gap:10px;padding:0 14px 4px;}
-.pstat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.pstat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;}
 .pstat-big{
-  background:var(--bg3);border-radius:12px;padding:12px 8px;
-  text-align:center;border:1px solid var(--border);
-  border-top:3px solid;
+  background:var(--bg2);padding:14px 8px;text-align:center;
 }
 .pstat-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .pstat-card{
-  background:var(--bg3);border-radius:12px;padding:14px;
+  background:var(--bg2);border-radius:12px;padding:14px;
   border:1px solid var(--border);
 }
-.pstat-card-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
-.pstat-val{font-size:20px;font-weight:800;line-height:1;}
-.pstat-lbl{font-size:9px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.pstat-card-title{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.pstat-val{font-size:22px;font-weight:800;color:var(--text);line-height:1;}
+.pstat-lbl{font-size:9px;color:var(--text3);margin-top:5px;text-transform:uppercase;letter-spacing:0.3px;}
 
 /* ── UPCOMING GRID ───────────────────────────── */
 .upcoming-section{padding:0 0 4px;}
@@ -1165,14 +1166,6 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
     </div>
   </div>
 
-  <!-- STATS -->
-  <div class="profile-section">
-    <div class="profile-section-hdr profile-section-hdr-sticky">
-      <span class="profile-section-title">Stats</span>
-    </div>
-    <div class="profile-stats" id="profileStats"></div>
-  </div>
-
   <!-- TOP PICKS -->
   <div class="profile-section">
     <div class="profile-section-hdr profile-section-hdr-sticky">
@@ -1180,6 +1173,14 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       <button class="profile-edit-btn" id="editPicksBtn" style="display:none">Edit</button>
     </div>
     <div class="profile-grid" id="topPicksGrid"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="profile-section">
+    <div class="profile-section-hdr profile-section-hdr-sticky">
+      <span class="profile-section-title">Stats</span>
+    </div>
+    <div class="profile-stats" id="profileStats"></div>
   </div>
 
   <!-- RECENT ACTIVITY -->
@@ -1954,9 +1955,8 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('on'));
     const page = document.getElementById('page-'+p);
     page.classList.add('on');
-    // Reset scroll to top when switching tabs
-    window.scrollTo(0,0);
-    page.scrollTop=0;
+    // Reset scroll to top when switching tabs (profile handles its own)
+    if(p !== 'profile'){ window.scrollTo(0,0); page.scrollTop=0; }
     if(p==='log'){
       filter='all';
       document.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
@@ -1965,7 +1965,13 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if(p==='favs')renderFavs();
     if(p==='watchlist'){renderWL();renderUpcoming();}
     if(p==='profile'){
-      document.getElementById('profileMiniHeader')?.classList.remove('visible');
+      // Hide mini header and kill observer before scroll reset
+      const mini = document.getElementById('profileMiniHeader');
+      if(mini) mini.classList.remove('visible');
+      if(window._profileObserver){ window._profileObserver.disconnect(); window._profileObserver=null; }
+      clearTimeout(window._profileObserverTimer);
+      window.scrollTo(0,0);
+      page.scrollTop=0;
       renderProfile();
       if(!currentUser && PUBLIC_UID && !getPfp() && !getPicks().length){
         loadPublicProfile(PUBLIC_UID).then(()=>renderProfile());
@@ -2530,7 +2536,7 @@ function renderProfile(){
     window._profileObserverTimer = setTimeout(()=>{
       window._profileObserver = new IntersectionObserver(([entry])=>{
         miniHeader.classList.toggle('visible', !entry.isIntersecting);
-      }, { threshold: 0 });
+      }, { threshold: 0, rootMargin: '-10px 0px 0px 0px' });
       window._profileObserver.observe(bigHeader);
     }, 300);
   }
@@ -2613,71 +2619,70 @@ function renderProfile(){
   ];
   const maxRating = Math.max(...ratingData.map(r=>r.v),1);
 
-  const colours5 = ['var(--purple)','var(--blue)','var(--teal)','var(--green)','var(--orange)'];
+  const colours5 = ['var(--text2)','var(--text2)','var(--text2)','var(--text2)','var(--text2)'];
 
-  // Row 1
+  // Row 1 — muted number row, just white numbers, dim labels
   let html = '<div class="pstat-row">'
-    + '<div class="pstat-big" style="border-color:var(--red)"><div class="pstat-val" style="color:var(--red)">'+movies+'</div><div class="pstat-lbl">Films</div></div>'
-    + '<div class="pstat-big" style="border-color:var(--teal)"><div class="pstat-val" style="color:var(--teal)">'+series+'</div><div class="pstat-lbl">Series</div></div>'
-    + '<div class="pstat-big" style="border-color:var(--green)"><div class="pstat-val" style="color:var(--green)">'+games+'</div><div class="pstat-lbl">Games</div></div>'
-    + '<div class="pstat-big" style="border-color:var(--pink)"><div class="pstat-val" style="color:var(--pink)">'+statsFavs+'</div><div class="pstat-lbl">Favs</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val">'+movies+'</div><div class="pstat-lbl">Films</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val">'+series+'</div><div class="pstat-lbl">Series</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val">'+games+'</div><div class="pstat-lbl">Games</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val">'+statsFavs+'</div><div class="pstat-lbl">Favs</div></div>'
     + '</div>';
 
-  // Row 2: donut + ratings
+  // Row 2: donut (muted) + rating bars (single accent colour)
   let ratingBars = '';
   ratingData.forEach(function(r){
     ratingBars += '<div style="display:flex;align-items:center;gap:7px">'
       + '<div style="font-size:10px;color:var(--text3);width:52px;text-align:right;flex-shrink:0">'+r.l+'</div>'
-      + '<div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">'
-      + '<div style="height:100%;border-radius:4px;background:'+r.c+';width:'+Math.round((r.v/maxRating)*100)+'%;"></div></div>'
-      + '<div style="font-size:10px;color:var(--text2);width:16px;flex-shrink:0">'+r.v+'</div>'
+      + '<div style="flex:1;background:var(--bg4);border-radius:3px;height:6px;overflow:hidden">'
+      + '<div style="height:100%;border-radius:3px;background:'+r.c+';width:'+Math.round((r.v/maxRating)*100)+'%;opacity:0.75;"></div></div>'
+      + '<div style="font-size:10px;color:var(--text3);width:20px;text-align:right;flex-shrink:0">'+r.v+'</div>'
       + '</div>';
   });
 
   html += '<div class="pstat-row2">'
-    + '<div class="pstat-card"><div class="pstat-card-title">Type split</div>'
-    + '<div style="display:flex;align-items:center;gap:12px">'
-    + '<svg width="100" height="100" viewBox="0 0 100 100">'+donutSVG
-    + '<text x="50" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text)">'+statsTotal+'</text></svg>'
-    + '<div style="display:flex;flex-direction:column;gap:7px;font-size:11px">'
-    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--red);flex-shrink:0"></div><span style="color:var(--text2)">Films <b style="color:var(--text)">'+movies+'</b></span></div>'
-    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--teal);flex-shrink:0"></div><span style="color:var(--text2)">Series <b style="color:var(--text)">'+series+'</b></span></div>'
-    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--green);flex-shrink:0"></div><span style="color:var(--text2)">Games <b style="color:var(--text)">'+games+'</b></span></div>'
+    + '<div class="pstat-card"><div class="pstat-card-title">Breakdown</div>'
+    + '<div style="display:flex;align-items:center;gap:14px">'
+    + '<svg width="90" height="90" viewBox="0 0 100 100">'+donutSVG
+    + '<text x="50" y="54" text-anchor="middle" font-size="14" font-weight="800" fill="var(--text)">'+statsTotal+'</text></svg>'
+    + '<div style="display:flex;flex-direction:column;gap:8px;font-size:11px">'
+    + '<div style="color:var(--text3)">Films &nbsp;<b style="color:var(--text)">'+movies+'</b></div>'
+    + '<div style="color:var(--text3)">Series <b style="color:var(--text)">'+series+'</b></div>'
+    + '<div style="color:var(--text3)">Games &nbsp;<b style="color:var(--text)">'+games+'</b></div>'
     + '</div></div></div>'
     + '<div class="pstat-card"><div class="pstat-card-title">Ratings</div>'
-    + '<div style="display:flex;flex-direction:column;gap:6px">'+ratingBars+'</div></div>'
+    + '<div style="display:flex;flex-direction:column;gap:7px">'+ratingBars+'</div></div>'
     + '</div>';
 
-  // Row 3: activity bars
+  // Row 3: activity bars — single muted colour
   let actBars = '';
   monthCounts.forEach(function(m){
-    const h = m.count > 0 ? Math.max(10, Math.round((m.count/maxMonth)*100)) : 10;
-    const op = m.count > 0 ? (0.4 + 0.6*(m.count/maxMonth)).toFixed(2) : '0.15';
-    const lbl = m.count > 0 ? '<div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--blue)">'+m.count+'</div>' : '';
+    const h = m.count > 0 ? Math.max(8, Math.round((m.count/maxMonth)*100)) : 4;
+    const lbl = m.count > 0 ? '<div style="position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text2);font-weight:600">'+m.count+'</div>' : '';
     actBars += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">'
       + '<div style="flex:1;width:100%;display:flex;align-items:flex-end">'
-      + '<div style="width:100%;border-radius:4px 4px 0 0;background:var(--blue);opacity:'+op+';height:'+h+'%;position:relative">'+lbl+'</div>'
+      + '<div style="width:100%;border-radius:3px 3px 0 0;background:var(--text3);height:'+h+'%;position:relative">'+lbl+'</div>'
       + '</div>'
       + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">'+m.lbl+'</div>'
       + '</div>';
   });
   html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Activity — last 6 months</div>'
-    + '<div style="display:flex;align-items:flex-end;gap:6px;height:64px;padding-top:8px">'+actBars+'</div></div>';
+    + '<div style="display:flex;align-items:flex-end;gap:5px;height:60px;padding-top:20px">'+actBars+'</div></div>';
 
-  // Row 4: top genres
+  // Row 4: top genres — single dim bar
   if(topGenres.length){
     let genreRows = '';
     topGenres.forEach(function(g, i){
       genreRows += '<div style="display:flex;align-items:center;gap:8px">'
-        + '<div style="font-size:10px;color:var(--text3);width:14px;text-align:center">'+(i+1)+'</div>'
-        + '<div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">'
-        + '<div style="height:100%;border-radius:4px;background:'+colours5[i]+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
-        + '<div style="font-size:11px;color:var(--text2);min-width:70px">'+g[0]+'</div>'
+        + '<div style="font-size:10px;color:var(--text3);width:14px;text-align:center;flex-shrink:0">'+(i+1)+'</div>'
+        + '<div style="flex:1;background:var(--bg4);border-radius:3px;height:6px;overflow:hidden">'
+        + '<div style="height:100%;border-radius:3px;background:var(--text2);opacity:'+(0.9 - i*0.15)+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
+        + '<div style="font-size:11px;color:var(--text2);min-width:80px">'+g[0]+'</div>'
         + '<div style="font-size:10px;color:var(--text3)">'+g[1]+'</div>'
         + '</div>';
     });
     html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Top genres</div>'
-      + '<div style="display:flex;flex-direction:column;gap:7px">'+genreRows+'</div></div>';
+      + '<div style="display:flex;flex-direction:column;gap:8px">'+genreRows+'</div></div>';
   }
 
   document.getElementById('profileStats').innerHTML = html;
