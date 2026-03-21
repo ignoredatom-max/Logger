@@ -259,7 +259,7 @@ body::before{content:none}
 .row:active .row-del{color:var(--text3)}
 
 /* ── FOOTER CREDIT ───────────────────────────── */
-.list-footer{padding:48px 20px 24px;text-align:center;font-size:12px;color:var(--text3);letter-spacing:0.3px;opacity:0.6}
+.list-footer{padding:48px 20px 100px;text-align:center;font-size:12px;color:var(--text3);letter-spacing:0.3px;opacity:0.6}
 
 /* ── EMPTY ───────────────────────────────────── */
 .empty{padding:70px 20px;text-align:center}
@@ -1023,7 +1023,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       <div class="logo-wrap">
         <img src="logo.png" class="logo-img" alt="FlickShelft">
       </div>
-      <div class="header-sub" id="headerSub">Aditya's personal media diary</div>
+      <div class="header-sub" id="headerSub">personal media diary</div>
     </div>
     <div style="display:flex;align-items:flex-start;gap:14px">
       <div style="display:flex;gap:12px">
@@ -1090,7 +1090,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
   <div class="header" style="padding-top:16px;padding-bottom:12px">
     <div>
       <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
-      <div class="header-sub">Stuff you loved ❤️</div>
+      <div class="header-sub" id="favsSub">Stuff you loved ❤️</div>
     </div>
   </div>
   <div class="toolbar" style="padding-top:2px">
@@ -1728,6 +1728,13 @@ async function delEntry(id,ev){
 // ── RENDER FAVS ─────────────────────────────────────────
 let favFilter='all';
 function renderFavs(){
+  // Update subtitle based on whose diary
+  const sub = document.getElementById('favsSub');
+  if(sub){
+    if(PUBLIC_UID && !currentUser) sub.textContent = `Stuff ${getDisplayName()} loved ❤️`;
+    else if(currentUser) sub.textContent = 'Stuff you loved ❤️';
+    else sub.textContent = 'Stuff you loved ❤️';
+  }
   const favs=DATA.filter(x=>x.fav&&(favFilter==='all'||x.type===favFilter));
   const el=document.getElementById('fav-list');
   if(!DATA.filter(x=>x.fav).length){
@@ -2326,7 +2333,7 @@ updateAuthUI();
 // ── STATS IN HEADER ──────────────────────────────────────
 function renderStats(){
   const el = document.getElementById('headerSub');
-  if(!DATA.length){ el.innerHTML = "Aditya's personal media diary"; return; }
+  if(!DATA.length){ el.innerHTML = `${getDisplayName()}'s personal media diary`; return; }
 
   const now = new Date();
   const thisMonth = DATA.filter(e=>{
