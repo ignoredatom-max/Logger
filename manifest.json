@@ -1,6 +1,6 @@
 {
-  "name": "Logger",
-  "short_name": "Logger",
+  "name": "FlickShelft",
+  "short_name": "FlickShelft",
   "description": "Your personal media diary",
   "start_url": "./index.html",
   "display": "standalone",
