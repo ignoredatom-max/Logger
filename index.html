@@ -432,7 +432,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .tmdb-attr{font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:0.2px}
 
 /* ── WATCHLIST ────────────────────────────────── */
-.wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;background:var(--bg)}
+.wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border)}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px;overflow:hidden;max-height:0;opacity:0;transition:max-height 0.25s ease,opacity 0.2s ease,margin 0.25s ease;margin-bottom:0;}
 .wl-type-bar.show{max-height:48px;opacity:1;margin-bottom:10px;}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px}
@@ -1078,20 +1078,6 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
         </div>
         <button class="wl-add" id="wlAddBtn">Add</button>
       </div>
-    </div>
-  </div>
-    <div class="wl-type-bar">
-      <button class="wl-tsel on movie" data-wt="movie">🎬 Film</button>
-      <button class="wl-tsel" data-wt="series">📺 Series</button>
-      <button class="wl-tsel" data-wt="game">🎮 Game</button>
-    </div>
-    <div class="wl-search-row">
-      <div class="wl-search-box">
-        <input class="wl-inp" id="wlInp" placeholder="Search to add…" type="text" autocomplete="off">
-        <div class="wl-spin" id="wlSpin"></div>
-        <div class="wl-dropdown" id="wlDropdown"></div>
-      </div>
-      <button class="wl-add" id="wlAddBtn">Add</button>
     </div>
   </div>
   <!-- UPCOMING GRID -->
