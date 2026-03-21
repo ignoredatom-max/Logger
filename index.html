@@ -93,7 +93,7 @@ body::before{content:none}
 }
 .logo-dot{width:5px;height:5px;background:var(--blue);border-radius:50%;margin-left:3px;margin-bottom:8px;flex-shrink:0;align-self:flex-end;box-shadow:0 0 8px var(--blue)}
 /* ── HEADER ──────────────────────────────────── */
-.header{padding:16px 16px 8px;display:flex;align-items:flex-end;justify-content:space-between;position:sticky;top:0;z-index:91;background:rgba(26,26,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.header{padding:16px 16px 8px;display:flex;align-items:flex-end;justify-content:space-between}
 .header-sub{font-size:11px;color:var(--text3);margin-top:5px;letter-spacing:0.2px}
 .counts{display:flex;gap:14px;align-items:flex-end}
 .count-item{text-align:right}
@@ -113,7 +113,7 @@ body::before{content:none}
 .nav-avatar-ph{font-size:18px;line-height:1;}
 
 /* ── TOOLBAR ─────────────────────────────────── */
-.toolbar{padding:4px 16px 10px;display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:90;background:rgba(26,26,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.toolbar{padding:4px 16px 10px;display:flex;gap:8px;align-items:center}
 .seg{display:flex;background:var(--bg2);border-radius:14px;padding:3px;flex:1;border:1px solid var(--border)}
 .seg-btn{flex:1;padding:6px 4px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text3);cursor:pointer;border-radius:11px;transition:all 0.18s;letter-spacing:0.2px}
 .seg-btn.on{background:var(--bg4);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
@@ -432,7 +432,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .tmdb-attr{font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:0.2px}
 
 /* ── WATCHLIST ────────────────────────────────── */
-.wl-search-wrap{padding:0 16px 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;background:rgba(26,26,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;background:rgba(26,26,26,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px;overflow:hidden;max-height:0;opacity:0;transition:max-height 0.25s ease,opacity 0.2s ease,margin 0.25s ease;margin-bottom:0;}
 .wl-type-bar.show{max-height:48px;opacity:1;margin-bottom:10px;}
 .wl-type-bar{display:flex;gap:7px;margin-bottom:10px}
@@ -1088,20 +1088,18 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- FAVOURITES PAGE -->
 <div class="page" id="page-favs">
-  <div style="position:sticky;top:0;z-index:91;background:rgba(26,26,26,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)">
-    <div class="header" style="padding-top:16px;padding-bottom:12px;position:relative">
-      <div>
-        <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
-        <div class="header-sub" id="favsSub">Stuff you loved ❤️</div>
-      </div>
+  <div class="header" style="padding-top:16px;padding-bottom:12px">
+    <div>
+      <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
+      <div class="header-sub" id="favsSub">Stuff you loved ❤️</div>
     </div>
-    <div class="toolbar" style="padding-top:2px;position:relative;top:auto">
-      <div class="seg">
-        <button class="seg-btn on" data-ff="all">All</button>
-        <button class="seg-btn" data-ff="movie">🎬</button>
-        <button class="seg-btn" data-ff="series">📺</button>
-        <button class="seg-btn" data-ff="game">🎮</button>
-      </div>
+  </div>
+  <div class="toolbar" style="padding-top:2px;position:sticky;top:0;z-index:90;background:rgba(26,26,26,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)">
+    <div class="seg">
+      <button class="seg-btn on" data-ff="all">All</button>
+      <button class="seg-btn" data-ff="movie">🎬</button>
+      <button class="seg-btn" data-ff="series">📺</button>
+      <button class="seg-btn" data-ff="game">🎮</button>
     </div>
   </div>
   <div class="fav-list-inner" id="fav-list"></div>
