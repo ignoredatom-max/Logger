@@ -836,17 +836,16 @@ body.readonly .row{cursor:default}
   position:sticky;top:0;z-index:91;
   background:var(--bg);
   display:flex;align-items:center;gap:12px;
-  padding:10px 16px 10px;
+  padding:0 16px;
   border-bottom:1px solid var(--border);
-  transform:translateY(-100%);
+  max-height:0;overflow:hidden;
   opacity:0;
-  transition:transform 0.25s ease, opacity 0.25s ease;
-  pointer-events:none;
+  transition:max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
 }
 .profile-mini-header.visible{
-  transform:translateY(0);
+  max-height:60px;
+  padding:10px 16px;
   opacity:1;
-  pointer-events:auto;
 }
 .profile-mini-pfp,.profile-mini-pfp-ph{
   width:36px;height:36px;border-radius:50%;
@@ -1946,9 +1945,12 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
     const p=btn.dataset.page;
     document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('on'));
-    document.getElementById('page-'+p).classList.add('on');
+    const page = document.getElementById('page-'+p);
+    page.classList.add('on');
+    // Reset scroll to top when switching tabs
+    window.scrollTo(0,0);
+    page.scrollTop=0;
     if(p==='log'){
-      // reset filter to all so everything shows
       filter='all';
       document.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
       renderLog();
@@ -1957,7 +1959,6 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if(p==='watchlist'){renderWL();renderUpcoming();}
     if(p==='profile'){
       renderProfile();
-      // If visitor and profile data not yet loaded, reload it
       if(!currentUser && PUBLIC_UID && !getPfp() && !getPicks().length){
         loadPublicProfile(PUBLIC_UID).then(()=>renderProfile());
       }
