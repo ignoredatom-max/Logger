@@ -2611,97 +2611,74 @@ function renderProfile(){
   ];
   const maxRating = Math.max(...ratingData.map(r=>r.v),1);
 
-  document.getElementById('profileStats').innerHTML = `
-    <!-- Row 1: big numbers -->
-    <div class="pstat-row">
-      <div class="pstat-big" style="border-color:var(--red)">
-        <div class="pstat-val" style="color:var(--red)">${movies}</div>
-        <div class="pstat-lbl">Films</div>
-      </div>
-      <div class="pstat-big" style="border-color:var(--teal)">
-        <div class="pstat-val" style="color:var(--teal)">${series}</div>
-        <div class="pstat-lbl">Series</div>
-      </div>
-      <div class="pstat-big" style="border-color:var(--green)">
-        <div class="pstat-val" style="color:var(--green)">${games}</div>
-        <div class="pstat-lbl">Games</div>
-      </div>
-      <div class="pstat-big" style="border-color:var(--pink)">
-        <div class="pstat-val" style="color:var(--pink)">${favs}</div>
-        <div class="pstat-lbl">Favs</div>
-      </div>
-    </div>
+  const colours5 = ['var(--purple)','var(--blue)','var(--teal)','var(--green)','var(--orange)'];
 
-    <!-- Row 2: type donut + rating bars side by side -->
-    <div class="pstat-row2">
-      <div class="pstat-card">
-        <div class="pstat-card-title">Type split</div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <svg width="100" height="100" viewBox="0 0 100 100">
-            ${donutSVG}
-            <text x="50" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text)">${total}</text>
-          </svg>
-          <div style="display:flex;flex-direction:column;gap:7px;font-size:11px">
-            <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--red);flex-shrink:0"></div><span style="color:var(--text2)">Films <b style="color:var(--text)">${movies}</b></span></div>
-            <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--teal);flex-shrink:0"></div><span style="color:var(--text2)">Series <b style="color:var(--text)">${series}</b></span></div>
-            <div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--green);flex-shrink:0"></div><span style="color:var(--text2)">Games <b style="color:var(--text)">${games}</b></span></div>
-          </div>
-        </div>
-      </div>
+  // Row 1
+  let html = '<div class="pstat-row">'
+    + '<div class="pstat-big" style="border-color:var(--red)"><div class="pstat-val" style="color:var(--red)">'+movies+'</div><div class="pstat-lbl">Films</div></div>'
+    + '<div class="pstat-big" style="border-color:var(--teal)"><div class="pstat-val" style="color:var(--teal)">'+series+'</div><div class="pstat-lbl">Series</div></div>'
+    + '<div class="pstat-big" style="border-color:var(--green)"><div class="pstat-val" style="color:var(--green)">'+games+'</div><div class="pstat-lbl">Games</div></div>'
+    + '<div class="pstat-big" style="border-color:var(--pink)"><div class="pstat-val" style="color:var(--pink)">'+favs+'</div><div class="pstat-lbl">Favs</div></div>'
+    + '</div>';
 
-      <div class="pstat-card">
-        <div class="pstat-card-title">Ratings</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${ratingData.map(r=>`
-            <div style="display:flex;align-items:center;gap:7px">
-              <div style="font-size:10px;color:var(--text3);width:52px;text-align:right;flex-shrink:0">${r.l}</div>
-              <div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">
-                <div style="height:100%;border-radius:4px;background:${r.c};width:${Math.round((r.v/maxRating)*100)}%;transition:width 0.6s ease"></div>
-              </div>
-              <div style="font-size:10px;color:var(--text2);width:16px;flex-shrink:0">${r.v}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
+  // Row 2: donut + ratings
+  let ratingBars = '';
+  ratingData.forEach(function(r){
+    ratingBars += '<div style="display:flex;align-items:center;gap:7px">'
+      + '<div style="font-size:10px;color:var(--text3);width:52px;text-align:right;flex-shrink:0">'+r.l+'</div>'
+      + '<div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">'
+      + '<div style="height:100%;border-radius:4px;background:'+r.c+';width:'+Math.round((r.v/maxRating)*100)+'%;"></div></div>'
+      + '<div style="font-size:10px;color:var(--text2);width:16px;flex-shrink:0">'+r.v+'</div>'
+      + '</div>';
+  });
 
-    <!-- Row 3: monthly activity bars -->
-    <div class="pstat-card" style="margin:0">
-      <div class="pstat-card-title">Activity — last 6 months</div>
-      <div style="display:flex;align-items:flex-end;gap:6px;height:64px;padding-top:8px">
-        ${monthCounts.map(m=>`
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">
-            <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--blue);opacity:${m.count>0?0.4+0.6*(m.count/maxMonth):0.15};height:${m.count>0?Math.max(10,Math.round((m.count/maxMonth)*100))+'%':'10%'};transition:height 0.5s ease;position:relative">
-                ${m.count>0?`<div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--blue)">${m.count}</div>`:''}
-              </div>
-            </div>
-            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">${m.lbl}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
+  html += '<div class="pstat-row2">'
+    + '<div class="pstat-card"><div class="pstat-card-title">Type split</div>'
+    + '<div style="display:flex;align-items:center;gap:12px">'
+    + '<svg width="100" height="100" viewBox="0 0 100 100">'+donutSVG
+    + '<text x="50" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text)">'+total+'</text></svg>'
+    + '<div style="display:flex;flex-direction:column;gap:7px;font-size:11px">'
+    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--red);flex-shrink:0"></div><span style="color:var(--text2)">Films <b style="color:var(--text)">'+movies+'</b></span></div>'
+    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--teal);flex-shrink:0"></div><span style="color:var(--text2)">Series <b style="color:var(--text)">'+series+'</b></span></div>'
+    + '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:2px;background:var(--green);flex-shrink:0"></div><span style="color:var(--text2)">Games <b style="color:var(--text)">'+games+'</b></span></div>'
+    + '</div></div></div>'
+    + '<div class="pstat-card"><div class="pstat-card-title">Ratings</div>'
+    + '<div style="display:flex;flex-direction:column;gap:6px">'+ratingBars+'</div></div>'
+    + '</div>';
 
-    <!-- Row 4: top genres -->
-    ${topGenres.length ? `
-    <div class="pstat-card" style="margin:0">
-      <div class="pstat-card-title">Top genres</div>
-      <div style="display:flex;flex-direction:column;gap:7px">
-        ${topGenres.map((g,i)=>{
-          const colours = ['var(--purple)','var(--blue)','var(--teal)','var(--green)','var(--orange)'];
-          return `
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="font-size:10px;color:var(--text3);width:14px;text-align:center">${i+1}</div>
-            <div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">
-              <div style="height:100%;border-radius:4px;background:${colours[i]};width:${Math.round((g[1]/topGenres[0][1])*100)}%;transition:width 0.6s ease"></div>
-            </div>
-            <div style="font-size:11px;color:var(--text2);min-width:70px">${g[0]}</div>
-            <div style="font-size:10px;color:var(--text3)">${g[1]}</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : ''}
-  `;
+  // Row 3: activity bars
+  let actBars = '';
+  monthCounts.forEach(function(m){
+    const h = m.count > 0 ? Math.max(10, Math.round((m.count/maxMonth)*100)) : 10;
+    const op = m.count > 0 ? (0.4 + 0.6*(m.count/maxMonth)).toFixed(2) : '0.15';
+    const lbl = m.count > 0 ? '<div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--blue)">'+m.count+'</div>' : '';
+    actBars += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">'
+      + '<div style="flex:1;width:100%;display:flex;align-items:flex-end">'
+      + '<div style="width:100%;border-radius:4px 4px 0 0;background:var(--blue);opacity:'+op+';height:'+h+'%;position:relative">'+lbl+'</div>'
+      + '</div>'
+      + '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px">'+m.lbl+'</div>'
+      + '</div>';
+  });
+  html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Activity — last 6 months</div>'
+    + '<div style="display:flex;align-items:flex-end;gap:6px;height:64px;padding-top:8px">'+actBars+'</div></div>';
+
+  // Row 4: top genres
+  if(topGenres.length){
+    let genreRows = '';
+    topGenres.forEach(function(g, i){
+      genreRows += '<div style="display:flex;align-items:center;gap:8px">'
+        + '<div style="font-size:10px;color:var(--text3);width:14px;text-align:center">'+(i+1)+'</div>'
+        + '<div style="flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">'
+        + '<div style="height:100%;border-radius:4px;background:'+colours5[i]+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
+        + '<div style="font-size:11px;color:var(--text2);min-width:70px">'+g[0]+'</div>'
+        + '<div style="font-size:10px;color:var(--text3)">'+g[1]+'</div>'
+        + '</div>';
+    });
+    html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Top genres</div>'
+      + '<div style="display:flex;flex-direction:column;gap:7px">'+genreRows+'</div></div>';
+  }
+
+  document.getElementById('profileStats').innerHTML = html;
 }
 
 function profileCard(e, removable){
