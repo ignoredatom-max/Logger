@@ -135,7 +135,7 @@ body::before{content:none}
   background:var(--bg3);
   border-top:1px solid var(--border2);
   border-bottom:1px solid var(--border2);
-  position:sticky;top:0;z-index:10;
+  position:sticky;top:var(--sticky-top, 0px);z-index:10;
 }
 
 /* ── ROW — Letterboxd exact layout ───────────── */
@@ -433,9 +433,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 
 /* ── WATCHLIST ────────────────────────────────── */
 .wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border)}
-.wl-type-bar{display:flex;gap:7px;margin-bottom:10px;overflow:hidden;max-height:0;opacity:0;transition:max-height 0.25s ease,opacity 0.2s ease,margin 0.25s ease;margin-bottom:0;}
-.wl-type-bar.show{max-height:48px;opacity:1;margin-bottom:10px;}
-.wl-type-bar{display:flex;gap:7px;margin-bottom:10px}
+.wl-type-bar{display:flex;gap:7px;margin-bottom:10px;}
 .wl-tsel{
   flex:1;padding:9px 4px;background:var(--bg2);border:1.5px solid transparent;
   color:var(--text3);border-radius:10px;font-family:'Inter',sans-serif;
@@ -1660,6 +1658,11 @@ const FOOTER='<div class="list-footer">made with love by Aditya ♥️</div>';
 
 // ── RENDER LOG ──────────────────────────────────────────
 function renderLog(){
+  // Set month header sticky top to sit below the sticky log header wrapper
+  requestAnimationFrame(()=>{
+    const wrapper = document.querySelector('#page-log > div[style*="sticky"]');
+    if(wrapper) document.documentElement.style.setProperty('--sticky-top', wrapper.offsetHeight+'px');
+  });
   const container=document.getElementById('list');
   let list=filter==='all'?[...DATA]:DATA.filter(x=>x.type===filter);
   if(sortBy==='new')  list.sort((a,b)=>b.id-a.id);
@@ -1827,18 +1830,11 @@ document.querySelectorAll('.wl-tsel').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.wl-tsel').forEach(b=>b.classList.remove('on','game','movie','series'));
     btn.classList.add('on',btn.dataset.wt);wlType=btn.dataset.wt;wlPending=null;
-    const q=document.getElementById('wlInp').value.trim();if(q.length>=2)wlRunSearch(q);
+    const inp=document.getElementById('wlInp');
+    const q=inp.value.trim();
+    if(q.length>=2) wlRunSearch(q);
+    inp.focus();
   });
-});
-document.getElementById('wlInp').addEventListener('focus',()=>{
-  document.querySelector('.wl-type-bar').classList.add('show');
-});
-document.getElementById('wlInp').addEventListener('blur',()=>{
-  // Delay so type button clicks register first
-  setTimeout(()=>{
-    const q=document.getElementById('wlInp').value.trim();
-    if(!q) document.querySelector('.wl-type-bar').classList.remove('show');
-  },200);
 });
 document.getElementById('wlInp').addEventListener('input',()=>{
   const q=document.getElementById('wlInp').value.trim();wlPending=null;clearTimeout(wlSearchTmr);
