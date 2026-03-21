@@ -113,7 +113,7 @@ body::before{content:none}
 .nav-avatar-ph{font-size:18px;line-height:1;}
 
 /* ── TOOLBAR ─────────────────────────────────── */
-.toolbar{padding:4px 16px 10px;display:flex;gap:8px;align-items:center}
+.toolbar{padding:4px 16px 6px;display:flex;gap:8px;align-items:center}
 .seg{display:flex;background:var(--bg2);border-radius:14px;padding:3px;flex:1;border:1px solid var(--border)}
 .seg-btn{flex:1;padding:6px 4px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;border:none;background:transparent;color:var(--text3);cursor:pointer;border-radius:11px;transition:all 0.18s;letter-spacing:0.2px}
 .seg-btn.on{background:var(--bg4);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
@@ -133,7 +133,6 @@ body::before{content:none}
   font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
   color:var(--text2);
   background:var(--bg3);
-  border-top:1px solid var(--border2);
   border-bottom:1px solid var(--border2);
   position:sticky;top:var(--sticky-top, 0px);z-index:10;
 }
@@ -433,7 +432,8 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 
 /* ── WATCHLIST ────────────────────────────────── */
 .wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border)}
-.wl-type-bar{display:flex;gap:7px;margin-bottom:10px;}
+.wl-type-bar{display:none;gap:7px;margin-bottom:10px;}
+.wl-type-bar.show{display:flex;}
 .wl-tsel{
   flex:1;padding:9px 4px;background:var(--bg2);border:1.5px solid transparent;
   color:var(--text3);border-radius:10px;font-family:'Inter',sans-serif;
@@ -831,6 +831,33 @@ body.readonly .row{cursor:default}
   padding:28px 16px 20px;text-align:center;gap:12px;
   position:relative;
 }
+/* Mini sticky header shown when big header scrolls away */
+.profile-mini-header{
+  position:sticky;top:0;z-index:91;
+  background:var(--bg);
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px 10px;
+  border-bottom:1px solid var(--border);
+  transform:translateY(-100%);
+  opacity:0;
+  transition:transform 0.25s ease, opacity 0.25s ease;
+  pointer-events:none;
+}
+.profile-mini-header.visible{
+  transform:translateY(0);
+  opacity:1;
+  pointer-events:auto;
+}
+.profile-mini-pfp,.profile-mini-pfp-ph{
+  width:36px;height:36px;border-radius:50%;
+  object-fit:cover;flex-shrink:0;
+}
+.profile-mini-pfp-ph{
+  background:var(--bg3);border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:var(--text2);
+}
+.profile-mini-name{font-size:15px;font-weight:700;color:var(--text);}
 .profile-pfp-wrap{position:relative;}
 .profile-pfp,.profile-pfp-ph{
   width:88px;height:88px;border-radius:50%;
@@ -1111,7 +1138,13 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- PROFILE PAGE -->
 <div class="page" id="page-profile">
-  <div class="profile-header">
+  <!-- Mini sticky header — appears when scrolling down -->
+  <div class="profile-mini-header" id="profileMiniHeader">
+    <img class="profile-mini-pfp" id="profileMiniPfp" src="" alt="" style="display:none">
+    <div class="profile-mini-pfp-ph" id="profileMiniPh">A</div>
+    <div class="profile-mini-name" id="profileMiniName">Aditya</div>
+  </div>
+  <div class="profile-header" id="profileHeaderBlock">
     <div class="profile-pfp-wrap">
       <img class="profile-pfp" id="profilePfp" src="" alt="" style="display:none">
       <div class="profile-pfp-ph" id="profilePfpPh">A</div>
@@ -1827,6 +1860,8 @@ function wlLog(i){
 // ── WATCHLIST SEARCH ────────────────────────────────────
 let wlType='movie',wlPending=null,wlSearchTmr=null;
 document.querySelectorAll('.wl-tsel').forEach(btn=>{
+  // mousedown prevents blur from firing before click
+  btn.addEventListener('mousedown', e=>e.preventDefault());
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.wl-tsel').forEach(b=>b.classList.remove('on','game','movie','series'));
     btn.classList.add('on',btn.dataset.wt);wlType=btn.dataset.wt;wlPending=null;
@@ -1835,6 +1870,21 @@ document.querySelectorAll('.wl-tsel').forEach(btn=>{
     if(q.length>=2) wlRunSearch(q);
     inp.focus();
   });
+});
+document.getElementById('wlInp').addEventListener('focus',()=>{
+  document.querySelector('.wl-type-bar').classList.add('show');
+});
+document.getElementById('wlInp').addEventListener('blur',()=>{
+  setTimeout(()=>{
+    // Don't hide if a type button is focused or active
+    if(document.activeElement?.closest('.wl-type-bar')) return;
+    const q=document.getElementById('wlInp').value.trim();
+    if(!q) document.querySelector('.wl-type-bar').classList.remove('show');
+  },200);
+});
+// Prevent type buttons from blurring the input
+document.querySelectorAll('.wl-tsel').forEach(btn=>{
+  btn.addEventListener('mousedown', e=>e.preventDefault());
 });
 document.getElementById('wlInp').addEventListener('input',()=>{
   const q=document.getElementById('wlInp').value.trim();wlPending=null;clearTimeout(wlSearchTmr);
@@ -2450,6 +2500,25 @@ function renderProfile(){
 
   if(pfp){ pfpImg.src=pfp; pfpImg.style.display='block'; pfpPh.style.display='none'; }
   else{ pfpImg.style.display='none'; pfpPh.style.display='flex'; pfpPh.textContent=name[0].toUpperCase(); }
+
+  // Populate mini sticky header
+  const miniPfp = document.getElementById('profileMiniPfp');
+  const miniPh  = document.getElementById('profileMiniPh');
+  const miniName = document.getElementById('profileMiniName');
+  if(miniName) miniName.textContent = name;
+  if(pfp && miniPfp){ miniPfp.src=pfp; miniPfp.style.display='block'; miniPh.style.display='none'; }
+  else if(miniPh){ miniPfp.style.display='none'; miniPh.style.display='flex'; miniPh.textContent=name[0].toUpperCase(); }
+
+  // IntersectionObserver — show mini header when big header scrolls out
+  const bigHeader = document.getElementById('profileHeaderBlock');
+  const miniHeader = document.getElementById('profileMiniHeader');
+  if(bigHeader && miniHeader){
+    if(window._profileObserver) window._profileObserver.disconnect();
+    window._profileObserver = new IntersectionObserver(([entry])=>{
+      miniHeader.classList.toggle('visible', !entry.isIntersecting);
+    }, { threshold: 0, rootMargin: '0px 0px 0px 0px' });
+    window._profileObserver.observe(bigHeader);
+  }
 
   document.getElementById('profileName').textContent = name;
   updateHeaderAvatar(pfp, name);
