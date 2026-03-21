@@ -431,7 +431,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .tmdb-attr{font-size:10px;color:var(--text3);margin-top:6px;letter-spacing:0.2px}
 
 /* ── WATCHLIST ────────────────────────────────── */
-.wl-search-wrap{padding:0 16px 10px;border-bottom:1px solid var(--border)}
+.wl-search-wrap{padding:10px 16px 10px;border-bottom:1px solid var(--border)}
 .wl-type-bar{display:none;gap:7px;margin-bottom:10px;}
 .wl-type-bar.show{display:flex;}
 .wl-tsel{
@@ -805,7 +805,7 @@ body.readonly .row{cursor:default}
 /* ── PROFILE SHARE BTN ───────────────────────── */
 .profile-share-btn{
   position:absolute;top:16px;right:16px;
-  padding:7px 14px;
+  padding:6px 12px;
   background:var(--bg3);border:1px solid var(--border2);
   border-radius:20px;color:var(--text2);font-size:11px;font-weight:600;
   cursor:pointer;font-family:Inter,sans-serif;
@@ -828,7 +828,7 @@ body.readonly .row{cursor:default}
 /* ── PROFILE PAGE ────────────────────────────── */
 .profile-header{
   display:flex;flex-direction:column;align-items:center;
-  padding:28px 16px 20px;text-align:center;gap:12px;
+  padding:8px 16px 16px;text-align:center;gap:8px;
   position:relative;
 }
 /* Mini sticky header shown when big header scrolls away */
@@ -1044,7 +1044,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- LOG PAGE -->
 <div class="page on" id="page-log">
-  <div style="position:sticky;top:0;z-index:91;background:var(--bg)">
+  <div style="position:sticky;top:0;z-index:91;background:var(--bg);border-bottom:1px solid var(--border2)">
     <div class="header" style="position:relative">
       <div>
         <div class="logo-wrap">
@@ -1082,8 +1082,8 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- WATCHLIST PAGE -->
 <div class="page" id="page-watchlist">
-  <div style="position:sticky;top:0;z-index:91;background:var(--bg)">
-    <div class="header" style="padding-top:14px;padding-bottom:0;position:relative">
+  <div style="position:sticky;top:0;z-index:91;background:var(--bg);box-shadow:0 1px 0 var(--bg)">
+    <div class="header" style="padding-top:14px;padding-bottom:10px;position:relative">
       <div>
         <div class="logo-wrap"><span class="logo-l">W</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">atchlist</span><div class="logo-dot"></div></div>
         <div class="header-sub">Things to check out</div>
@@ -1117,14 +1117,14 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- FAVOURITES PAGE -->
 <div class="page" id="page-favs">
-  <div style="position:sticky;top:0;z-index:91;background:var(--bg)">
+  <div style="position:sticky;top:0;z-index:91;background:var(--bg);box-shadow:0 1px 0 var(--bg)">
     <div class="header" style="padding-top:16px;padding-bottom:12px;position:relative">
       <div>
         <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
         <div class="header-sub" id="favsSub">Stuff you loved ❤️</div>
       </div>
     </div>
-    <div class="toolbar" style="padding-top:2px;position:relative;border-bottom:1px solid var(--border)">
+    <div class="toolbar" style="padding-top:2px;position:relative">
       <div class="seg">
         <button class="seg-btn on" data-ff="all">All</button>
         <button class="seg-btn" data-ff="movie">🎬</button>
