@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#14141a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Logger</title>
+<title>FlickShelft</title>
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -78,7 +78,12 @@ body::before{content:none}
 .page.on{display:block}
 
 /* ── LOGO ────────────────────────────────────── */
-.logo-wrap{display:flex;align-items:baseline;gap:0;line-height:1}
+.logo-wrap{display:flex;align-items:center;gap:10px;line-height:1}
+.logo-img{height:36px;object-fit:contain;display:block;}
+.logo-page-title{
+  font-family:'Inter',sans-serif;font-weight:200;font-size:14px;
+  letter-spacing:5px;text-transform:uppercase;color:var(--text3);
+}
 .logo-l{
   font-family:'Playfair Display',serif;font-style:italic;font-weight:700;
   font-size:38px;color:var(--text);letter-spacing:-2px;line-height:1;
@@ -89,7 +94,6 @@ body::before{content:none}
   margin-left:3px;align-self:center;margin-top:6px;
 }
 .logo-dot{width:5px;height:5px;background:var(--blue);border-radius:50%;margin-left:3px;margin-bottom:8px;flex-shrink:0;align-self:flex-end;box-shadow:0 0 8px var(--blue)}
-
 /* ── HEADER ──────────────────────────────────── */
 .header{padding:16px 16px 8px;display:flex;align-items:flex-end;justify-content:space-between}
 .header-sub{font-size:11px;color:var(--text3);margin-top:5px;letter-spacing:0.2px}
@@ -1015,9 +1019,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
   <div class="header">
     <div>
       <div class="logo-wrap">
-        <span class="logo-l">L</span>
-        <span class="logo-ogger">ogger</span>
-        <div class="logo-dot"></div>
+        <img src="logo.png" class="logo-img" alt="FlickShelft">
       </div>
       <div class="header-sub" id="headerSub">Aditya's personal media diary</div>
     </div>
@@ -1176,7 +1178,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 <div class="tutorial-overlay" id="tutorialOverlay" style="display:none">
   <div class="tutorial-card">
     <div class="tutorial-logo">
-      <span class="logo-l">L</span><span class="logo-ogger">ogger</span><div class="logo-dot"></div>
+      <img src="logo.png" class="logo-img" alt="FlickShelft" style="height:36px;">
     </div>
     <div class="tutorial-tagline">Built by Aditya to track every film, series and game worth remembering.</div>
     <div class="tutorial-steps">
@@ -1363,9 +1365,9 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
         <div class="sc-footer">
           <div>
             <div class="sc-name" id="scName">Aditya</div>
-            <div class="sc-brand">logged on Logger •</div>
+            <div class="sc-brand">logged on FlickShelft •</div>
           </div>
-          <div class="sc-logo-wrap"><span class="sc-logo-l">L</span><span class="sc-logo-dot"></span></div>
+          <div class="sc-logo-wrap"><img src="logo.png" style="height:22px;object-fit:contain;"></div>
         </div>
       </div>
     </div>
