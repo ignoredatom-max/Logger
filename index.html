@@ -79,7 +79,7 @@ body::before{content:none}
 
 /* ── LOGO ────────────────────────────────────── */
 .logo-wrap{display:flex;align-items:center;gap:10px;line-height:1}
-.logo-img{height:32px;object-fit:contain;display:block;}
+.logo-img{height:38px;object-fit:contain;display:block;}
 .logo-page-title{
   font-family:'Inter',sans-serif;font-weight:200;font-size:14px;
   letter-spacing:5px;text-transform:uppercase;color:var(--text3);
@@ -2236,26 +2236,180 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
   btn.textContent = '⏳ Generating…';
   btn.disabled = true;
   try{
-    const card = document.getElementById('shareCard');
-    const canvas = await html2canvas(card,{
-      backgroundColor: null,
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      logging: false
-    });
-    const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
     const entry = DATA.find(x=>x.id===editId);
-    a.download = `logger-${(entry?.title||'card').replace(/\s+/g,'-').toLowerCase()}.png`;
+    const rKey = RATINGS.includes(entry?.rating)?entry.rating:'decent';
+    const COLOURS = {skip:'#ff453a',mediocre:'#ff9f0a',decent:'#00b4d8',excellent:'#00c566',peak:'#bf5af2'};
+    const BGCOLOURS = {skip:'rgba(255,69,58,0.22)',mediocre:'rgba(255,159,10,0.22)',decent:'rgba(0,180,216,0.22)',excellent:'rgba(0,197,102,0.22)',peak:'rgba(191,90,242,0.22)'};
+    const icon = entry?.type==='game'?'🎮':entry?.type==='movie'?'🎬':'📺';
+
+    const W = 1080, H = 1080;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Draw blurred poster as background
+    if(entry?.poster){
+      await new Promise(res=>{
+        const img = new Image();
+        img.crossOrigin='anonymous';
+        img.onload = ()=>{
+          // Fill canvas with stretched poster
+          ctx.filter='blur(40px) brightness(0.3) saturate(1.5)';
+          ctx.drawImage(img, -60, -60, W+120, H+120);
+          ctx.filter='none';
+          res();
+        };
+        img.onerror = res;
+        img.src = entry.poster;
+      });
+    } else {
+      ctx.fillStyle = '#161616';
+      ctx.fillRect(0,0,W,H);
+    }
+
+    // Dark overlay for readability
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0,0,W,H);
+
+    // Card rounded rect background
+    const pad = 60;
+    const cw = W - pad*2, ch = H - pad*2;
+    const cr = 48;
+    ctx.fillStyle = 'rgba(18,18,18,0.72)';
+    roundRect(ctx, pad, pad, cw, ch, cr);
+    ctx.fill();
+
+    // Small poster top-left inside card
+    const px = pad+48, py = pad+48;
+    const pw = 220, ph2 = 320;
+    if(entry?.poster){
+      await new Promise(res=>{
+        const img2 = new Image();
+        img2.crossOrigin='anonymous';
+        img2.onload = ()=>{
+          ctx.save();
+          roundRect(ctx, px, py, pw, ph2, 20);
+          ctx.clip();
+          ctx.drawImage(img2, px, py, pw, ph2);
+          ctx.restore();
+          res();
+        };
+        img2.onerror = res;
+        img2.src = entry.poster;
+      });
+    } else {
+      ctx.fillStyle = '#2a2a2a';
+      ctx.save(); roundRect(ctx,px,py,pw,ph2,20); ctx.fill(); ctx.restore();
+      ctx.font = '100px serif'; ctx.textAlign='center';
+      ctx.fillText(icon, px+pw/2, py+ph2/2+36);
+    }
+
+    // Text area
+    const tx = px + pw + 48;
+    const tw = cw - pw - 48*3;
+
+    // Meta
+    ctx.font = '600 32px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.textAlign = 'left';
+    const meta = [icon, entry?.genre?.split(',')[0], entry?.year].filter(Boolean).join('  ·  ');
+    ctx.fillText(meta, tx, py + 48);
+
+    // Title
+    ctx.font = 'bold 68px Inter, sans-serif';
+    ctx.fillStyle = '#f0f0f0';
+    const words = (entry?.title||'').split(' ');
+    let line='', titleY = py+120, lineH=82;
+    for(const word of words){
+      const test = line+word+' ';
+      if(ctx.measureText(test).width > tw && line){
+        ctx.fillText(line.trim(), tx, titleY); titleY+=lineH; line='';
+      }
+      line+=word+' ';
+      if(titleY > py+300) break;
+    }
+    if(line) ctx.fillText(line.trim(), tx, titleY); titleY+=lineH+16;
+
+    // Rating pill
+    const pillLabel = RATING_LABELS[rKey];
+    const pillW = ctx.measureText(pillLabel).width + 60;
+    ctx.fillStyle = BGCOLOURS[rKey];
+    ctx.beginPath();
+    ctx.roundRect(tx, titleY, pillW, 58, 29);
+    ctx.fill();
+    ctx.font = 'bold 30px Inter, sans-serif';
+    ctx.fillStyle = COLOURS[rKey];
+    ctx.textAlign='center';
+    ctx.fillText(pillLabel, tx + pillW/2, titleY+38);
+    ctx.textAlign='left';
+
+    // Note
+    if(entry?.notes){
+      const noteY = Math.max(titleY+80, py+ph2+40);
+      ctx.strokeStyle='rgba(255,255,255,0.15)';
+      ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(pad+48, noteY); ctx.lineTo(pad+48, noteY+100); ctx.stroke();
+      ctx.font='italic 30px Inter, sans-serif';
+      ctx.fillStyle='rgba(255,255,255,0.5)';
+      const note = '"'+entry.notes+'"';
+      ctx.fillText(note.length>60?note.slice(0,57)+'…':note, pad+70, noteY+52);
+    }
+
+    // Divider
+    const divY = H - pad - 130;
+    ctx.strokeStyle='rgba(255,255,255,0.1)';
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(pad+48,divY); ctx.lineTo(W-pad-48,divY); ctx.stroke();
+
+    // Footer — name
+    ctx.font='bold 36px Inter, sans-serif';
+    ctx.fillStyle='#f0f0f0';
+    ctx.textAlign='left';
+    ctx.fillText(getDisplayName(), pad+48, divY+72);
+    ctx.font='28px Inter, sans-serif';
+    ctx.fillStyle='rgba(255,255,255,0.28)';
+    ctx.fillText('logged on FlickShelft', pad+48, divY+108);
+
+    // Footer logo — draw logo image
+    await new Promise(res=>{
+      const logoImg = new Image();
+      logoImg.onload=()=>{
+        const lh=50, lw=logoImg.width*(lh/logoImg.height);
+        ctx.globalAlpha=0.5;
+        ctx.drawImage(logoImg, W-pad-48-lw, divY+50, lw, lh);
+        ctx.globalAlpha=1;
+        res();
+      };
+      logoImg.onerror=res;
+      logoImg.src='logo.png';
+    });
+
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/jpeg', 0.92);
+    a.download = `flickshelft-${(entry?.title||'card').replace(/\s+/g,'-').toLowerCase()}.jpg`;
     a.click();
     toast('✅ Card saved!');
   } catch(e){
+    console.error(e);
     toast('❌ Could not generate image');
   }
   btn.textContent = '⬇ Save Image';
   btn.disabled = false;
 });
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
 // Boot — show cache instantly, Firebase syncs in background
 const _bootCache = cacheRead();
 DATA = _bootCache || [];
