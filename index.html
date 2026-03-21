@@ -1363,7 +1363,6 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
           <div class="sc-info">
             <div class="sc-meta" id="scMeta"></div>
             <div class="sc-title" id="scTitle"></div>
-            <span class="sc-rating-badge" id="scRatingBadge"></span>
             <span class="sc-rating-word" id="scRatingWord"></span>
           </div>
         </div>
@@ -2199,12 +2198,6 @@ function openShareCard(){
     poster.style.display='none'; ph.style.display='flex'; ph.textContent=icon;
   }
 
-  // Rating badge
-  const badge = document.getElementById('scRatingBadge');
-  badge.textContent = RATING_LABELS[rKey];
-  badge.style.background = RATING_BG[rKey];
-  badge.style.color = RATING_COLOURS[rKey];
-
   // Rating word
   const rWord = document.getElementById('scRatingWord');
   rWord.textContent = RATING_LABELS[rKey];
@@ -2262,7 +2255,6 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
         img.crossOrigin='anonymous';
         img.onload=()=>{
           ctx.save();
-          // rounded rect clip
           const r = 24*scale;
           ctx.beginPath();
           ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
@@ -2273,18 +2265,17 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
           ctx.drawImage(img,-80,-80,W+160,H+160);
           ctx.filter='none';
-          // dark overlay
-          ctx.fillStyle='rgba(0,0,0,0.3)';
-          ctx.drawImage(img,-80,-80,W+160,H+160);
-          ctx.filter='none';
-          // dark overlay
           ctx.fillStyle='rgba(0,0,0,0.28)';
           ctx.fillRect(0,0,W,H);
           ctx.restore();
           res();
         };
-        img.onerror=res;
-        img.src=entry.poster;
+        img.onerror=()=>{
+          ctx.fillStyle='#161616';
+          ctx.fillRect(0,0,W,H);
+          res();
+        };
+        img.src = entry.poster+'?t='+Date.now();
       });
     } else {
       ctx.fillStyle='#161616';
@@ -2294,8 +2285,9 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     // 2. Capture the card HTML on top (without bg blur)
     bg.style.display='none';
     const htmlCanvas = await html2canvas(card,{
-      backgroundColor:null, scale, useCORS:true, allowTaint:true, logging:false,
-      width:rect.width, height:rect.height
+      backgroundColor:null, scale, useCORS:true, allowTaint:false, logging:false,
+      width:rect.width, height:rect.height,
+      imageTimeout: 8000
     });
     bg.style.display='';
 
