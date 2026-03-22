@@ -1415,9 +1415,9 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
     </div>
     <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--border)">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Support</div>
-      <a href="mailto:adityakachare@outlook.in" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <a href="/cdn-cgi/l/email-protection#0564616c717c646e64666d647760456a7071696a6a6e2b6c6b" style="display:flex;align-items:center;gap:10px;text-decoration:none">
         <span style="font-size:18px">📧</span>
-        <span style="font-size:13px;color:var(--text2)">adityakachare@outlook.in</span>
+        <span style="font-size:13px;color:var(--text2)"><span class="__cf_email__" data-cfemail="0766636e737e666c66646f667562476872736b68686c296e69">[email&#160;protected]</span></span>
       </a>
     </div>
     <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;margin-bottom:20px;border:1px solid var(--border)">
@@ -1487,7 +1487,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
   </div>
 </div>
 
-<script type="module">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 // ── FIREBASE ────────────────────────────────────────────
 import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
@@ -1890,7 +1890,7 @@ function renderWL(){
     el.innerHTML='<div class="empty"><span class="empty-ico">🔖</span><div class="empty-title">Watchlist is empty</div><div class="empty-sub">Search above and add something</div></div>';return;
   }
   el.innerHTML=released.map((item)=>{
-    const i=wl.indexOf(item);
+    const i=wl.findIndex(x=>x.title===item.title && x.type===item.type);
     const icon=item.type==='game'?'🎮':item.type==='movie'?'🎬':'📺';
     const thumb=item.poster
       ?`<img class="wl-thumb" src="${item.poster}" loading="lazy" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="wl-ph" style="display:none">${icon}</div>`
@@ -2931,7 +2931,7 @@ function renderUpcoming(){
   section.style.display='block';
 
   grid.innerHTML = upcoming.map((item,i)=>{
-    const wlIdx = wl.indexOf(item);
+    const wlIdx = wl.findIndex(x=>x.title===item.title && x.type===item.type);
     const rel  = new Date(item.releaseDate);
     const days = Math.ceil((rel-today)/(1000*60*60*24));
     const numDisplay = days===1?'1':String(days);
@@ -3020,16 +3020,17 @@ function showInfoCard(entry, context){
     actions.appendChild(shareBtn);
   }
   if(context==='watchlist'){
+    const wlIdx = _infoEntry._wlIdx;
     const removeBtn = document.createElement('button');
     removeBtn.className='info-wl-btn';
     removeBtn.textContent='Remove';
-    removeBtn.onclick=()=>{ closeInfoCard(); wlDel(_infoEntry._wlIdx); };
+    removeBtn.onclick=()=>{ closeInfoCard(); wlDel(wlIdx); };
     actions.appendChild(removeBtn);
     const logBtn = document.createElement('button');
     logBtn.className='info-edit-btn';
     logBtn.textContent='Log it ✓';
     logBtn.style.flex='2';
-    logBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>wlLog(_infoEntry._wlIdx),150); };
+    logBtn.onclick=()=>{ closeInfoCard(); setTimeout(()=>wlLog(wlIdx),150); };
     actions.appendChild(logBtn);
   }
 
@@ -3296,12 +3297,4 @@ window.openEdit         = openEdit;
 window.wlLog            = wlLog;
 window.wlDel            = wlDel;
 window.removePick       = removePick;
-window.addPickFromSearch= addPickFromSearch;
-window.openPickSelector = openPickSelector;
-window.openInfo         = openInfo;
-window.openInfoFromWL   = openInfoFromWL;
-window.profileCardClick = profileCardClick;
-window.editProfileName  = editProfileName;
-</script>
-</body>
-</html>
+window.addPickFromSearch= a
