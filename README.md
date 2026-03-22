@@ -4,7 +4,7 @@ A personal media diary PWA to track movies, series and games you've watched or p
 
 ## Features
 - Log films, series and games with ratings, status and notes
-- Letterboxd-style diary view grouped by month
+- Diary view grouped by month
 - 5-stage rating system — Skip / Mediocre / Decent / Excellent / Peak
 - Watchlist to queue things up
 - Favourites page
