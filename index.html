@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#14141a">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>FlickShelft</title>
 <link rel="manifest" href="manifest.json">
@@ -1410,14 +1411,14 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
   <div style="width:100%;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px 40px;max-height:80vh;overflow-y:auto">
     <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px"></div>
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px">Aditya Suresh Kachare</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px">Aditya Kachare</div>
       <div style="font-size:12px;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase">Creator &amp; Developer</div>
     </div>
     <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--border)">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Support</div>
-      <a href="/cdn-cgi/l/email-protection#0564616c717c646e64666d647760456a7071696a6a6e2b6c6b" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <a href="#" id="supportEmailLink" style="display:flex;align-items:center;gap:10px;text-decoration:none">
         <span style="font-size:18px">📧</span>
-        <span style="font-size:13px;color:var(--text2)"><span class="__cf_email__" data-cfemail="0766636e737e666c66646f667562476872736b68686c296e69">[email&#160;protected]</span></span>
+        <span style="font-size:13px;color:var(--text2)" id="supportEmailText">adityakachare @ outlook.in</span>
       </a>
     </div>
     <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;margin-bottom:20px;border:1px solid var(--border)">
@@ -1487,7 +1488,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+<script type="module">
 // ── FIREBASE ────────────────────────────────────────────
 import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
@@ -3274,6 +3275,11 @@ function showInstallBanner(){
 }
 
 // ── ABOUT / SUPPORT ──────────────────────────────────────
+// Set email via JS so Cloudflare can't obfuscate it
+(function(){ 
+  const el = document.getElementById('supportEmailLink');
+  if(el){ const e='adityakachare'+'@'+'outlook.in'; el.href='mailto:'+e; }
+})();
 function openAbout(){
   closeSheet();
   const el = document.getElementById('aboutOverlay');
