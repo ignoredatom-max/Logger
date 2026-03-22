@@ -2626,10 +2626,10 @@ function renderProfile(){
 
   // Row 1 — muted number row, just white numbers, dim labels
   let html = '<div class="pstat-row">'
-    + '<div class="pstat-big"><div class="pstat-val" style="color:#ff8a80">'+movies+'</div><div class="pstat-lbl">Films</div></div>'
-    + '<div class="pstat-big"><div class="pstat-val" style="color:#80cbc4">'+series+'</div><div class="pstat-lbl">Series</div></div>'
-    + '<div class="pstat-big"><div class="pstat-val" style="color:#a5d6a7">'+games+'</div><div class="pstat-lbl">Games</div></div>'
-    + '<div class="pstat-big"><div class="pstat-val" style="color:#ce93d8">'+statsFavs+'</div><div class="pstat-lbl">Favs</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val" style="color:#fff">'+movies+'</div><div class="pstat-lbl">Films</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val" style="color:#fff">'+series+'</div><div class="pstat-lbl">Series</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val" style="color:#fff">'+games+'</div><div class="pstat-lbl">Games</div></div>'
+    + '<div class="pstat-big"><div class="pstat-val" style="color:#fff">'+statsFavs+'</div><div class="pstat-lbl">Favs</div></div>'
     + '</div>';
 
   // Row 2: donut (muted) + rating bars (single accent colour)
@@ -2649,9 +2649,9 @@ function renderProfile(){
     + '<svg width="90" height="90" viewBox="0 0 100 100">'+donutSVG
     + '<text x="50" y="54" text-anchor="middle" font-size="14" font-weight="800" fill="var(--text)">'+statsTotal+'</text></svg>'
     + '<div style="display:flex;flex-direction:column;gap:8px;font-size:11px">'
-    + '<div style="color:var(--text2)">Films &nbsp;<b style="color:var(--text)">'+movies+'</b></div>'
-    + '<div style="color:var(--text2)">Series <b style="color:var(--text)">'+series+'</b></div>'
-    + '<div style="color:var(--text2)">Games &nbsp;<b style="color:var(--text)">'+games+'</b></div>'
+    + '<div style="display:flex;justify-content:space-between;min-width:70px;color:var(--text2)"><span>Films</span> <b style="color:var(--text)">'+movies+'</b></div>'
+    + '<div style="display:flex;justify-content:space-between;min-width:70px;color:var(--text2)"><span>Series</span> <b style="color:var(--text)">'+series+'</b></div>'
+    + '<div style="display:flex;justify-content:space-between;min-width:70px;color:var(--text2)"><span>Games</span> <b style="color:var(--text)">'+games+'</b></div>'
     + '</div></div></div>'
     + '<div class="pstat-card"><div class="pstat-card-title">Ratings</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">'+ratingBars+'</div></div>'
@@ -2680,7 +2680,7 @@ function renderProfile(){
       genreRows += '<div style="display:flex;align-items:center;gap:8px">'
         + '<div style="font-size:10px;color:var(--text2);width:14px;text-align:center;flex-shrink:0">'+(i+1)+'</div>'
         + '<div style="flex:1;background:var(--bg4);border-radius:3px;height:6px;overflow:hidden">'
-        + '<div style="height:100%;border-radius:3px;background:'+genreColours[i]+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
+        + '<div style="height:100%;border-radius:3px;background:#fff;opacity:'+(0.9 - i*0.15)+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
         + '<div style="font-size:11px;color:#fff;min-width:80px">'+g[0]+'</div>'
         + '<div style="font-size:10px;color:var(--text2)">'+g[1]+'</div>'
         + '</div>';
