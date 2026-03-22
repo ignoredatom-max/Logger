@@ -1243,6 +1243,9 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       </div>
     </div>
     <button class="tutorial-signin-btn" id="tutorialSignInBtn">Sign in with Google</button>
+    <div style="margin-top:12px;text-align:center">
+      <button id="guestBtn" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline;text-underline-offset:2px;">Continue as guest</button>
+    </div>
     <div class="tutorial-footer">made with ♥️ by Aditya</div>
   </div>
 </div>
@@ -2658,10 +2661,10 @@ function renderProfile(){
   let actBars = '';
   monthCounts.forEach(function(m){
     const h = m.count > 0 ? Math.max(8, Math.round((m.count/maxMonth)*100)) : 4;
-    const lbl = m.count > 0 ? '<div style="position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text);font-weight:600">'+m.count+'</div>' : '';
+    const lbl = m.count > 0 ? '<div style="position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;color:#fff;font-weight:700">'+m.count+'</div>' : '';
     actBars += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">'
       + '<div style="flex:1;width:100%;display:flex;align-items:flex-end">'
-      + '<div style="width:100%;border-radius:3px 3px 0 0;background:var(--text2);height:'+h+'%;position:relative">'+lbl+'</div>'
+      + '<div style="width:100%;border-radius:3px 3px 0 0;background:var(--blue);opacity:'+(m.count>0?0.5+0.5*(m.count/maxMonth):0.15)+';height:'+h+'%;position:relative">'+lbl+'</div>'
       + '</div>'
       + '<div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:0.3px">'+m.lbl+'</div>'
       + '</div>';
@@ -2669,15 +2672,16 @@ function renderProfile(){
   html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Activity — last 6 months</div>'
     + '<div style="display:flex;align-items:flex-end;gap:5px;height:60px;padding-top:20px">'+actBars+'</div></div>';
 
-  // Row 4: top genres — single dim bar
+  // Row 4: top genres — coloured bars
+  const genreColours = ['var(--purple)','var(--blue)','var(--teal)','var(--green)','var(--orange)'];
   if(topGenres.length){
     let genreRows = '';
     topGenres.forEach(function(g, i){
       genreRows += '<div style="display:flex;align-items:center;gap:8px">'
         + '<div style="font-size:10px;color:var(--text2);width:14px;text-align:center;flex-shrink:0">'+(i+1)+'</div>'
         + '<div style="flex:1;background:var(--bg4);border-radius:3px;height:6px;overflow:hidden">'
-        + '<div style="height:100%;border-radius:3px;background:var(--text2);opacity:'+(0.9 - i*0.15)+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
-        + '<div style="font-size:11px;color:var(--text2);min-width:80px">'+g[0]+'</div>'
+        + '<div style="height:100%;border-radius:3px;background:'+genreColours[i]+';width:'+Math.round((g[1]/topGenres[0][1])*100)+'%;"></div></div>'
+        + '<div style="font-size:11px;color:#fff;min-width:80px">'+g[0]+'</div>'
         + '<div style="font-size:10px;color:var(--text2)">'+g[1]+'</div>'
         + '</div>';
     });
@@ -3104,6 +3108,20 @@ function editProfileName(){
   input.addEventListener('blur', done);
   input.addEventListener('keydown', e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){input.value=current;input.blur();} });
 }
+
+document.getElementById('guestBtn').addEventListener('click',()=>{
+  hideTutorial();
+  DATA = [];
+  setReadOnly(false);
+  renderLog(); renderFavs(); renderWL();
+  // Show persistent guest banner
+  const banner = document.createElement('div');
+  banner.id = 'guestBanner';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;z-index:400;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--text2);';
+  banner.innerHTML = '⚠️ Guest mode — data won\'t be saved'
+    + '<button onclick="document.getElementById(\'tutorialOverlay\').style.display=\'flex\';document.getElementById(\'guestBanner\').remove()" style="background:var(--blue);color:#fff;border:none;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">Sign in</button>';
+  document.body.appendChild(banner);
+});
 
 // ── TUTORIAL ─────────────────────────────────────────────
 function showTutorial(){
