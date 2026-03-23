@@ -3,6 +3,41 @@ Personal Media Diary by Aditya
 ————————————————————————————————————————
 
 
+1.9.1
+23 March 2026
+
+  - Guest mode added — small underlined Continue as guest link on
+    tutorial page, barely visible to regular users
+  - Guest mode enters the app fully for testing without signing in
+  - Persistent banner at bottom warns data won't be saved
+  - Banner has a Sign in button that returns to tutorial
+
+  - Support & Contact card added
+  - Tap Aditya in any footer to open it
+  - Settings → Support & Contact also opens it
+  - Shows name, Creator & Developer title, email, Instagram,
+    Discord and Telegram — all tappable links
+  - Email set via JS to prevent Cloudflare obfuscation
+
+  - Local cache now updates immediately on every save and edit
+  - Previously cache was written before DATA was updated so new
+    entries were missing from cache until next Firestore sync
+  - Boot now scans all uid-specific cache keys so your full diary
+    loads instantly without waiting for Firebase
+  - Month separators now sit in correct position from first frame
+  - Previously took 4-5 seconds for the 1px gap to fix itself
+
+  - Watchlist add now immediately shows item in upcoming countdown
+    without needing to switch tabs
+  - Remove from upcoming countdown now works immediately
+  - Removed item disappears from countdown grid without refresh
+  - Watchlist remove error fixed — wlIdx now captured at button
+    creation time to avoid null reference on close
+
+  - Favourites sticky header now has a proper border separator
+  - meta tag deprecation warning fixed — added mobile-web-app-capable
+  - Cloudflare script 404 error fixed
+
 1.9.0
 22 March 2026
 
