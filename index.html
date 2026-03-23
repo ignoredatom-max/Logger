@@ -2285,8 +2285,9 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
     notes:document.getElementById('fNotes').value.trim(),
     lastSeason:mType==='series'?mLastSeason:0
   };
-  await fsSave(entry);
+  // Update DATA first so cacheWrite in fsSave captures the new entry
   if(editId) DATA=DATA.map(x=>x.id===editId?entry:x); else DATA.unshift(entry);
+  await fsSave(entry);
   // Remove from watchlist
   const wl=getWL();
   const wi=wlLogIdx>=0?wlLogIdx:wl.findIndex(x=>x.title.toLowerCase()===title.toLowerCase());
@@ -2448,7 +2449,25 @@ function roundRect(ctx, x, y, w, h, r){
 }
 
 // Boot — show cache instantly, Firebase syncs in background
-const _bootCache = cacheRead();
+// Try to find any cached data (uid-specific keys) before Firebase fires
+function bootCacheRead(){
+  try{
+    // Try generic key first
+    const generic = localStorage.getItem(CACHE_KEY);
+    // Also scan for any lgr_cache_ keys
+    let best = null, bestLen = 0;
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith('lgr_cache_')){
+        const v = localStorage.getItem(k);
+        if(v){ const parsed = JSON.parse(v); if(parsed.length > bestLen){ best = parsed; bestLen = parsed.length; } }
+      }
+    }
+    if(best) return best;
+    return generic ? JSON.parse(generic) : null;
+  }catch(e){ return null; }
+}
+const _bootCache = bootCacheRead();
 DATA = _bootCache || [];
 setStatusOpts();
 renderLog();
