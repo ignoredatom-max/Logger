@@ -564,6 +564,7 @@ input[type=range].r-slider:active::-webkit-slider-thumb{transform:scale(1.25)}
 .row{animation:fadeUp 0.3s ease both}
 .wl-card{animation:fadeUp 0.3s ease both}
 .fav-card{animation:fadeUp 0.3s ease both}
+.no-anim .row,.no-anim .wl-card,.no-anim .fav-card,.no-anim .upcoming-card,.no-anim .fav-card{animation:none!important;}
 
 /* ── SHARE BUTTON ─────────────────────────────── */
 .btn-share{
@@ -1711,6 +1712,7 @@ function saveWL(a){
 function todayVal(){ return new Date().toISOString().slice(0,10); }
 
 let DATA=[],filter='all',sortBy='new';
+let _initialRenderDone = false;
 let editId=null,mType='movie',mRating=2,mPoster='',mTitle='',mFav=false,mGenre='',mYear='';
 let searchTmr=null,dropData=[];
 let mSeasons=0, mLastSeason=0; // series season state
@@ -1761,9 +1763,11 @@ const FOOTER='<div class="list-footer">made with love by <span onclick="openAbou
 
 // ── RENDER LOG ──────────────────────────────────────────
 function renderLog(){
-  // Set month header sticky top to sit below the sticky log header wrapper
   updateStickyTop();
   const container=document.getElementById('list');
+  // Disable row animations after first render to avoid flash on Firestore sync
+  if(_initialRenderDone) container.classList.add('no-anim');
+  else { container.classList.remove('no-anim'); _initialRenderDone = true; }
   let list=filter==='all'?[...DATA]:DATA.filter(x=>x.type===filter);
   if(sortBy==='new')  list.sort((a,b)=>b.id-a.id);
   if(sortBy==='old')  list.sort((a,b)=>a.id-b.id);
@@ -2002,10 +2006,10 @@ document.getElementById('wlAddBtn').addEventListener('click',()=>{
 document.querySelectorAll('.seg-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');filter=btn.dataset.f;renderLog();
+    btn.classList.add('on');filter=btn.dataset.f;_initialRenderDone=false;renderLog();
   });
 });
-document.getElementById('sortSel').addEventListener('change',e=>{sortBy=e.target.value;renderLog();});
+document.getElementById('sortSel').addEventListener('change',e=>{sortBy=e.target.value;_initialRenderDone=false;renderLog();});
 
 // ── NAV ─────────────────────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn=>{
