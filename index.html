@@ -1756,10 +1756,7 @@ const FOOTER='<div class="list-footer">made with love by <span onclick="openAbou
 // ── RENDER LOG ──────────────────────────────────────────
 function renderLog(){
   // Set month header sticky top to sit below the sticky log header wrapper
-  requestAnimationFrame(()=>{
-    const wrapper = document.querySelector('#page-log > div[style*="sticky"]');
-    if(wrapper) document.documentElement.style.setProperty('--sticky-top', wrapper.offsetHeight+'px');
-  });
+  updateStickyTop();
   const container=document.getElementById('list');
   let list=filter==='all'?[...DATA]:DATA.filter(x=>x.type===filter);
   if(sortBy==='new')  list.sort((a,b)=>b.id-a.id);
@@ -2449,6 +2446,12 @@ function roundRect(ctx, x, y, w, h, r){
 }
 
 // Boot — show cache instantly, Firebase syncs in background
+function updateStickyTop(){
+  requestAnimationFrame(()=>{
+    const wrapper = document.querySelector('#page-log > div[style*="sticky"]');
+    if(wrapper) document.documentElement.style.setProperty('--sticky-top', wrapper.offsetHeight+'px');
+  });
+}
 // Try to find any cached data (uid-specific keys) before Firebase fires
 function bootCacheRead(){
   try{
@@ -2471,6 +2474,7 @@ const _bootCache = bootCacheRead();
 DATA = _bootCache || [];
 setStatusOpts();
 renderLog();
+updateStickyTop();
 renderUpcoming();
 updateAuthUI();
 
