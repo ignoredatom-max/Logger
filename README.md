@@ -1,4 +1,4 @@
-# loGGer 🎬📺🎮
+# Logger 🎬📺🎮
 
 A personal media diary PWA to track movies, series and games you've watched or played.
 
@@ -23,4 +23,4 @@ A personal media diary PWA to track movies, series and games you've watched or p
 3. Sign in with Google to sync your data
 
 ## Live
-[Open loGGer](https://ignoredatom-max.github.io/Logger/)
+[Open Logger](https://ignoredatom-max.github.io/Logger/)
