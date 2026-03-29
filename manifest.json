@@ -1,11 +1,11 @@
 {
-  "name": "FlickShelft",
-  "short_name": "FlickShelft",
+  "name": "Logger",
+  "short_name": "Logger",
   "description": "Your personal media diary",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#1a1a1a",
-  "theme_color": "#1a1a1a",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
   "orientation": "portrait",
   "icons": [
     {

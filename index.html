@@ -6,17 +6,17 @@
 <meta name="theme-color" content="#14141a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>FlickShelft</title>
+<title>Logger</title>
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#1a1a1a;
-  --bg2:#242424;
-  --bg3:#2e2e2e;
-  --bg4:#383838;
+  --bg:#0f0f0f;
+  --bg2:#1a1a1a;
+  --bg3:#222222;
+  --bg4:#2c2c2c;
   --border:rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.12);
   --text:#f0f0f0;
@@ -38,19 +38,26 @@ html{background:var(--bg)}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
 /* ── BG ───────────────────────────────────────── */
-body::before{content:none}
+body::before{
+  content:'';
+  position:fixed;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg, var(--red) 0%, var(--teal) 50%, var(--green) 100%);
+  opacity:0.5;
+  z-index:200;
+  pointer-events:none;
+}
 
 /* ── NAV ─────────────────────────────────────── */
 .nav{
   position:fixed;bottom:12px;left:12px;right:12px;z-index:100;
-  background:rgba(22,22,22,0.75);
-  border:1px solid var(--border2);
+  background:rgba(30,30,30,0.92);
+  border:1px solid rgba(255,255,255,0.14);
   border-radius:16px;
   display:flex;
   padding:0;
   backdrop-filter:blur(60px) saturate(2.5);
   -webkit-backdrop-filter:blur(60px) saturate(2.5);
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset;
   transition:transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
 }
 .nav.hidden{
@@ -1063,7 +1070,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
     <div class="header" style="position:relative">
       <div>
         <div class="logo-wrap">
-          <img src="logo.png" class="logo-img" alt="FlickShelft">
+          <img src="logo.png" class="logo-img" alt="Logger">
         </div>
         <div class="header-sub" id="headerSub">personal media diary</div>
       </div>
@@ -1233,7 +1240,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 <div class="tutorial-overlay" id="tutorialOverlay" style="display:none">
   <div class="tutorial-card">
     <div class="tutorial-logo">
-      <img src="logo.png" class="logo-img" alt="FlickShelft" style="height:36px;">
+      <img src="logo.png" class="logo-img" alt="Logger" style="height:36px;">
     </div>
     <div class="tutorial-tagline">Built by Aditya to track every film, series and game worth remembering.</div>
     <div class="tutorial-steps">
@@ -1480,10 +1487,10 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
         <div class="sc-footer">
           <div>
             <div class="sc-name" id="scName">Aditya</div>
-            <div class="sc-brand">logged on FlickShelft •</div>
+            <div class="sc-brand">logged on Logger •</div>
           </div>
           <div class="sc-logo-wrap">
-            <img src="logo.png" class="sc-logo-img" alt="FlickShelft">
+            <img src="logo.png" class="sc-logo-img" alt="Logger">
           </div>
         </div>
       </div>
@@ -2437,7 +2444,7 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
 
     const a = document.createElement('a');
     a.href = finalCanvas.toDataURL('image/jpeg',0.95);
-    a.download = `flickshelft-${(entry?.title||'card').replace(/\s+/g,'-').toLowerCase()}.jpg`;
+    a.download = `logger-${(entry?.title||'card').replace(/\s+/g,'-').toLowerCase()}.jpg`;
     a.click();
     toast('✅ Card saved!');
   } catch(e){
@@ -2775,6 +2782,67 @@ function renderProfile(){
     });
     html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Top genres</div>'
       + '<div style="display:flex;flex-direction:column;gap:8px">'+genreRows+'</div></div>';
+  }
+
+  // ── BEST OF ──────────────────────────────────────────
+  // Best day
+  const dayMap = {};
+  DATA.forEach(function(e){
+    const d = new Date(e.id);
+    const key = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    dayMap[key] = (dayMap[key]||0) + 1;
+  });
+  const bestDay = Object.entries(dayMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // Best week (Mon-Sun)
+  const weekMap = {};
+  DATA.forEach(function(e){
+    const d = new Date(e.id);
+    const day = d.getDay();
+    const mon = new Date(d); mon.setDate(d.getDate() - ((day+6)%7));
+    const key = mon.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    weekMap[key] = (weekMap[key]||0) + 1;
+  });
+  const bestWeek = Object.entries(weekMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // Best month
+  const monthMap = {};
+  DATA.forEach(function(e){
+    const d = new Date(e.id);
+    const key = d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+    monthMap[key] = (monthMap[key]||0) + 1;
+  });
+  const bestMonth = Object.entries(monthMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // Best year
+  const yearMap = {};
+  DATA.forEach(function(e){
+    const y = new Date(e.id).getFullYear();
+    yearMap[y] = (yearMap[y]||0) + 1;
+  });
+  const bestYear = Object.entries(yearMap).sort((a,b)=>b[1]-a[1])[0];
+
+  if(bestDay){
+    const bestItems = [
+      {l:'Best day',   v:bestDay[1],   t:bestDay[0]},
+      {l:'Best week',  v:bestWeek[1],  t:'w/c '+bestWeek[0]},
+      {l:'Best month', v:bestMonth[1], t:bestMonth[0]},
+      {l:'Best year',  v:bestYear[1],  t:bestYear[0]},
+    ];
+    let bestRows = '';
+    bestItems.forEach(function(item){
+      bestRows += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">'
+        + '<div>'
+        + '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">'+item.l+'</div>'
+        + '<div style="font-size:12px;color:var(--text2)">'+item.t+'</div>'
+        + '</div>'
+        + '<div style="font-size:22px;font-weight:800;color:#fff">'+item.v+'</div>'
+        + '</div>';
+    });
+    // Remove last border
+    bestRows = bestRows.replace(/border-bottom:[^"]+"\s*}\s*<\/div>\s*<\/div>\s*<\/div>$/, function(m){ return m.replace('border-bottom:1px solid var(--border)','border-bottom:none'); });
+    html += '<div class="pstat-card" style="margin:0"><div class="pstat-card-title">Best of</div>'
+      + '<div style="display:flex;flex-direction:column">'+bestRows+'</div></div>';
   }
 
   document.getElementById('profileStats').innerHTML = html;
@@ -3275,7 +3343,7 @@ function showInstallBanner(){
       <img src="icon-192.png" style="width:36px;height:36px;border-radius:10px;flex-shrink:0">
       <div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Add to Home Screen</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:1px">Install FlickShelft for quick access</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">Install Logger for quick access</div>
       </div>
     </div>
     <button id="installBtn" style="background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;flex-shrink:0">Install</button>
@@ -3298,7 +3366,7 @@ function showInstallBanner(){
     const { outcome } = await _installPrompt.userChoice;
     _installPrompt = null;
     banner.remove();
-    if(outcome==='accepted') toast('✅ FlickShelft installed!');
+    if(outcome==='accepted') toast('✅ Logger installed!');
   });
 
   document.getElementById('installDismiss').addEventListener('click', ()=>{
