@@ -13,10 +13,10 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#1a1a1a;
-  --bg2:#242424;
-  --bg3:#2e2e2e;
-  --bg4:#383838;
+  --bg:#0f0f0f;
+  --bg2:#1a1a1a;
+  --bg3:#222222;
+  --bg4:#2c2c2c;
   --border:rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.12);
   --text:#f0f0f0;
@@ -50,14 +50,14 @@ body::before{
 /* ── NAV ─────────────────────────────────────── */
 .nav{
   position:fixed;bottom:12px;left:12px;right:12px;z-index:100;
-  background:rgba(20,20,20,0.55);
-  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(30,30,30,0.92);
+  border:1px solid rgba(255,255,255,0.14);
   border-radius:16px;
   display:flex;
   padding:0;
   backdrop-filter:blur(60px) saturate(2.5);
   -webkit-backdrop-filter:blur(60px) saturate(2.5);
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset;
   transition:transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
 }
 .nav.hidden{
@@ -1258,19 +1258,10 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       </div>
     </div>
     <button class="tutorial-signin-btn" id="tutorialSignInBtn">Sign in with Google</button>
+    <div style="margin-top:12px;text-align:center">
+      <button id="guestBtn" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline;text-underline-offset:2px;">Continue as guest</button>
+    </div>
     <div class="tutorial-footer">made with ♥️ by Aditya</div>
-    <button id="guestBtn" style="position:absolute;bottom:14px;right:14px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:Inter,sans-serif;opacity:0.4;padding:4px;">dev</button>
-  </div>
-</div>
-
-<!-- GUEST WARNING DIALOG -->
-<div id="guestWarning" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
-  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:24px;max-width:320px;width:100%">
-    <div style="font-size:22px;margin-bottom:12px;text-align:center">⚠️</div>
-    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center">Developer mode only</div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;text-align:center;margin-bottom:20px">Guest mode is for troubleshooting only. Nothing you log will be saved. Sign in with Google to use Logger properly.</div>
-    <button id="guestSignInInstead" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;margin-bottom:10px">Sign in with Google</button>
-    <button id="guestContinueAnyway" style="width:100%;padding:11px;background:none;border:1px solid var(--border2);border-radius:12px;font-size:13px;color:var(--text3);cursor:pointer;font-family:Inter,sans-serif">Continue anyway (data won't save)</button>
   </div>
 </div>
 
@@ -2405,11 +2396,11 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     finalCanvas.width = W; finalCanvas.height = H;
     const ctx = finalCanvas.getContext('2d');
 
-    // 1. Draw blurred bg poster manually — no crossOrigin to avoid Chromium CORS taint
+    // 1. Draw blurred bg poster manually
     if(entry?.poster){
       await new Promise(res=>{
         const img = new Image();
-        // No crossOrigin — allows Chromium to draw without taint restriction
+        img.crossOrigin='anonymous';
         img.onload=()=>{
           ctx.save();
           const r = 24*scale;
@@ -2432,17 +2423,17 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           ctx.fillRect(0,0,W,H);
           res();
         };
-        img.src = entry.poster;
+        img.src = entry.poster+'?t='+Date.now();
       });
     } else {
       ctx.fillStyle='#161616';
       ctx.fillRect(0,0,W,H);
     }
 
-    // 2. Capture the card HTML on top — allowTaint:true for Chromium
+    // 2. Capture the card HTML on top (without bg blur)
     bg.style.display='none';
     const htmlCanvas = await html2canvas(card,{
-      backgroundColor:null, scale, useCORS:false, allowTaint:true, logging:false,
+      backgroundColor:null, scale, useCORS:true, allowTaint:false, logging:false,
       width:rect.width, height:rect.height,
       imageTimeout: 8000
     });
@@ -3276,23 +3267,11 @@ function editProfileName(){
 }
 
 document.getElementById('guestBtn').addEventListener('click',()=>{
-  // Show warning dialog instead of entering directly
-  const warn = document.getElementById('guestWarning');
-  warn.style.display='flex';
-});
-
-document.getElementById('guestSignInInstead').addEventListener('click', async()=>{
-  document.getElementById('guestWarning').style.display='none';
-  try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
-  catch(e){ toast('❌ Sign-in failed: '+e.message); }
-});
-
-document.getElementById('guestContinueAnyway').addEventListener('click',()=>{
-  document.getElementById('guestWarning').style.display='none';
   hideTutorial();
   DATA = [];
   setReadOnly(false);
   renderLog(); renderFavs(); renderWL();
+  // Show persistent guest banner
   const banner = document.createElement('div');
   banner.id = 'guestBanner';
   banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;z-index:400;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--text2);';
