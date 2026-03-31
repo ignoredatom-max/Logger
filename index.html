@@ -14,9 +14,9 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#0f0f0f;
-  --bg2:#1a1a1a;
-  --bg3:#222222;
-  --bg4:#2c2c2c;
+  --bg2:#161616;
+  --bg3:#1e1e1e;
+  --bg4:#272727;
   --border:rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.12);
   --text:#f0f0f0;
@@ -50,14 +50,14 @@ body::before{
 /* ── NAV ─────────────────────────────────────── */
 .nav{
   position:fixed;bottom:12px;left:12px;right:12px;z-index:100;
-  background:rgba(30,30,30,0.92);
+  background:rgba(18,18,18,0.45);
   border:1px solid rgba(255,255,255,0.14);
   border-radius:16px;
   display:flex;
   padding:0;
-  backdrop-filter:blur(60px) saturate(2.5);
-  -webkit-backdrop-filter:blur(60px) saturate(2.5);
-  box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset;
+  backdrop-filter:blur(40px) saturate(3) brightness(1.1);
+  -webkit-backdrop-filter:blur(40px) saturate(3) brightness(1.1);
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.06) inset;
   transition:transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
 }
 .nav.hidden{
@@ -1258,10 +1258,19 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       </div>
     </div>
     <button class="tutorial-signin-btn" id="tutorialSignInBtn">Sign in with Google</button>
-    <div style="margin-top:12px;text-align:center">
-      <button id="guestBtn" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline;text-underline-offset:2px;">Continue as guest</button>
-    </div>
     <div class="tutorial-footer">made with ♥️ by Aditya</div>
+    <button id="guestBtn" style="position:absolute;bottom:14px;right:14px;background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:Inter,sans-serif;opacity:0.4;padding:4px;">dev</button>
+  </div>
+</div>
+
+<!-- GUEST WARNING DIALOG -->
+<div id="guestWarning" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:24px;max-width:320px;width:100%">
+    <div style="font-size:22px;margin-bottom:12px;text-align:center">⚠️</div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center">Developer mode only</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;text-align:center;margin-bottom:20px">Guest mode is for troubleshooting only. Nothing you log will be saved. Sign in with Google to use Logger properly.</div>
+    <button id="guestSignInInstead" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;margin-bottom:10px">Sign in with Google</button>
+    <button id="guestContinueAnyway" style="width:100%;padding:11px;background:none;border:1px solid var(--border2);border-radius:12px;font-size:13px;color:var(--text3);cursor:pointer;font-family:Inter,sans-serif">Continue anyway (data won't save)</button>
   </div>
 </div>
 
@@ -2396,11 +2405,11 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     finalCanvas.width = W; finalCanvas.height = H;
     const ctx = finalCanvas.getContext('2d');
 
-    // 1. Draw blurred bg poster manually
+    // 1. Draw blurred bg + poster manually so canvas stays untainted in Brave/Chrome
     if(entry?.poster){
       await new Promise(res=>{
         const img = new Image();
-        img.crossOrigin='anonymous';
+        img.crossOrigin = 'anonymous';
         img.onload=()=>{
           ctx.save();
           const r = 24*scale;
@@ -2410,34 +2419,60 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
           ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
           ctx.clip();
+          // Blurred background
           ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
           ctx.drawImage(img,-80,-80,W+160,H+160);
           ctx.filter='none';
           ctx.fillStyle='rgba(0,0,0,0.28)';
           ctx.fillRect(0,0,W,H);
           ctx.restore();
+
+          // Draw small poster in correct position on canvas
+          // Get DOM position of poster element
+          const posterEl = document.getElementById('scPoster');
+          const cardEl = document.getElementById('shareCard');
+          if(posterEl && posterEl.style.display !== 'none'){
+            const pr = posterEl.getBoundingClientRect();
+            const cr = cardEl.getBoundingClientRect();
+            const px = (pr.left - cr.left) * scale;
+            const py = (pr.top - cr.top) * scale;
+            const pw = pr.width * scale;
+            const ph = pr.height * scale;
+            ctx.save();
+            const pr2 = 10*scale;
+            ctx.beginPath();
+            ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
+            ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
+            ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
+            ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
+            ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img,px,py,pw,ph);
+            ctx.restore();
+          }
           res();
         };
         img.onerror=()=>{
-          ctx.fillStyle='#161616';
-          ctx.fillRect(0,0,W,H);
-          res();
+          ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res();
         };
-        img.src = entry.poster+'?t='+Date.now();
+        img.src = entry.poster + (entry.poster.includes('?')?'&':'?') + 'cb='+Date.now();
       });
     } else {
       ctx.fillStyle='#161616';
       ctx.fillRect(0,0,W,H);
     }
 
-    // 2. Capture the card HTML on top (without bg blur)
+    // 2. Hide both bg AND poster from html2canvas so it doesn't taint the canvas
+    const posterEl = document.getElementById('scPoster');
+    const origPosterDisplay = posterEl ? posterEl.style.display : '';
+    if(posterEl) posterEl.style.visibility = 'hidden';
     bg.style.display='none';
     const htmlCanvas = await html2canvas(card,{
       backgroundColor:null, scale, useCORS:true, allowTaint:false, logging:false,
-      width:rect.width, height:rect.height,
-      imageTimeout: 8000
+      width:rect.width, height:rect.height, imageTimeout:0
     });
     bg.style.display='';
+    if(posterEl) posterEl.style.visibility = '';
 
     // 3. Composite HTML on top of blurred bg
     ctx.drawImage(htmlCanvas,0,0);
@@ -3267,11 +3302,23 @@ function editProfileName(){
 }
 
 document.getElementById('guestBtn').addEventListener('click',()=>{
+  // Show warning dialog instead of entering directly
+  const warn = document.getElementById('guestWarning');
+  warn.style.display='flex';
+});
+
+document.getElementById('guestSignInInstead').addEventListener('click', async()=>{
+  document.getElementById('guestWarning').style.display='none';
+  try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch(e){ toast('❌ Sign-in failed: '+e.message); }
+});
+
+document.getElementById('guestContinueAnyway').addEventListener('click',()=>{
+  document.getElementById('guestWarning').style.display='none';
   hideTutorial();
   DATA = [];
   setReadOnly(false);
   renderLog(); renderFavs(); renderWL();
-  // Show persistent guest banner
   const banner = document.createElement('div');
   banner.id = 'guestBanner';
   banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;z-index:400;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--text2);';
