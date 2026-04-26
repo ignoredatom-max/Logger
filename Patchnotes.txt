@@ -1,7 +1,25 @@
 LOGGER — Patch Notes
 Personal Media Diary by Aditya
 ————————————————————————————————————————
+2.0.1
+25 March 2026
 
+  - Fixed series rewatch bug — logging a new season of a series
+    you have previously logged no longer flags it as Rewatched
+  - Only flags Rewatched if you log the same or lower season
+  - Rewatch banner updates live as you tap seasons in the picker
+  - Fixed infinite loop between season picker and dup check
+    that caused season buttons to stop responding
+
+  - Sticky headers on Log, Watchlist and Favourites now have
+    subtle blur — content slides behind with a frosted glass effect
+
+  - Rating bars in Stats redesigned — doubled in height,
+    rounder corners, bolder count numbers, higher opacity
+
+  - Nav bar frosted glass improved — saturate and brightness
+    tuned so content colours bleed through more richly
+    Less transparent, more polished and modern
 
 1.9.1
 23 March 2026
