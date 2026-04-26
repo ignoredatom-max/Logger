@@ -50,14 +50,14 @@ body::before{
 /* ── NAV ─────────────────────────────────────── */
 .nav{
   position:fixed;bottom:12px;left:12px;right:12px;z-index:100;
-  background:rgba(18,18,18,0.45);
-  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(28,28,30,0.82);
+  border:1px solid rgba(255,255,255,0.1);
   border-radius:16px;
   display:flex;
   padding:0;
-  backdrop-filter:blur(40px) saturate(3) brightness(1.1);
-  -webkit-backdrop-filter:blur(40px) saturate(3) brightness(1.1);
-  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.06) inset;
+  backdrop-filter:blur(30px) saturate(180%) brightness(0.9);
+  -webkit-backdrop-filter:blur(30px) saturate(180%) brightness(0.9);
+  box-shadow:0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset;
   transition:transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
 }
 .nav.hidden{
@@ -1066,7 +1066,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- LOG PAGE -->
 <div class="page on" id="page-log">
-  <div style="position:sticky;top:0;z-index:91;background:var(--bg);border-bottom:1px solid var(--border2)">
+  <div style="position:sticky;top:0;z-index:91;background:rgba(15,15,15,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border2)">
     <div class="header" style="position:relative">
       <div>
         <div class="logo-wrap">
@@ -1104,7 +1104,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- WATCHLIST PAGE -->
 <div class="page" id="page-watchlist">
-  <div style="position:sticky;top:0;z-index:91;background:var(--bg);box-shadow:0 1px 0 var(--bg)">
+  <div style="position:sticky;top:0;z-index:91;background:rgba(15,15,15,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)">
     <div class="header" style="padding-top:12px;padding-bottom:6px;position:relative">
       <div>
         <div class="logo-wrap"><span class="logo-l">W</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">atchlist</span><div class="logo-dot"></div></div>
@@ -1139,7 +1139,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
 
 <!-- FAVOURITES PAGE -->
 <div class="page" id="page-favs">
-  <div style="position:sticky;top:0;z-index:91;background:var(--bg);border-bottom:1px solid var(--border2)">
+  <div style="position:sticky;top:0;z-index:91;background:rgba(15,15,15,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border2)">
     <div class="header" style="padding-top:16px;padding-bottom:12px;position:relative">
       <div>
         <div class="logo-wrap"><span class="logo-l">F</span><span class="logo-ogger" style="letter-spacing:4px;font-size:14px">avourites</span><div class="logo-dot"></div></div>
@@ -2126,7 +2126,9 @@ function closeDD(){dropdown.classList.remove('show');}
 function checkDup(title){
   if(!title||editId)return;
   const ex=DATA.find(x=>x.title.toLowerCase()===title.toLowerCase()&&x.type===mType);
-  document.getElementById('dupBanner').classList.toggle('show',!!ex);
+  // For series: only flag as rewatch if same or lower season — new season = new entry, not rewatch
+  const isRewatch = !!ex && !(mType==='series' && ex.lastSeason>0 && mLastSeason>ex.lastSeason);
+  document.getElementById('dupBanner').classList.toggle('show', isRewatch);
   // Pre-fill season from last entry of same series
   if(ex && mType==='series' && ex.lastSeason>0){
     mLastSeason = ex.lastSeason;
@@ -2231,10 +2233,15 @@ function renderSeasonPicker(selectedUpTo){
   picker.querySelectorAll('.season-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const s=+btn.dataset.s;
-      // Selecting S3 means S1+S2+S3 all on, clicking active last one deselects
       if(s===mLastSeason){ mLastSeason=s-1; }
       else { mLastSeason=s; }
       renderSeasonPicker(mLastSeason);
+      // Update rewatch banner without calling checkDup (avoids loop)
+      if(mType==='series' && mTitle){
+        const ex=DATA.find(x=>x.title.toLowerCase()===mTitle.toLowerCase()&&x.type==='series');
+        const isRewatch = !!ex && !(ex.lastSeason>0 && mLastSeason>ex.lastSeason);
+        document.getElementById('dupBanner').classList.toggle('show', isRewatch);
+      }
     });
   });
 }
@@ -2299,7 +2306,8 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
   const title=(mTitle||searchInp.value).trim();
   if(!title){searchInp.style.boxShadow='0 0 0 2px var(--red)';setTimeout(()=>searchInp.style.boxShadow='',900);searchInp.focus();return;}
   const ratingKey=RATINGS[mRating]||'decent';
-  const isDup=!editId&&DATA.find(x=>x.title.toLowerCase()===title.toLowerCase()&&x.type===mType);
+  const dupEntry=!editId&&DATA.find(x=>x.title.toLowerCase()===title.toLowerCase()&&x.type===mType);
+  const isDup = !!dupEntry && !(mType==='series' && dupEntry.lastSeason>0 && mLastSeason>dupEntry.lastSeason);
   let entryId=editId||Date.now();
   if(!editId){while(DATA.find(x=>x.id===entryId))entryId++;}
   const entry={
@@ -2765,11 +2773,11 @@ function renderProfile(){
   // Row 2: donut (muted) + rating bars (single accent colour)
   let ratingBars = '';
   ratingData.forEach(function(r){
-    ratingBars += '<div style="display:flex;align-items:center;gap:7px">'
-      + '<div style="font-size:10px;color:var(--text2);width:52px;text-align:right;flex-shrink:0">'+r.l+'</div>'
-      + '<div style="flex:1;background:var(--bg4);border-radius:3px;height:6px;overflow:hidden">'
-      + '<div style="height:100%;border-radius:3px;background:'+r.c+';width:'+Math.round((r.v/maxRating)*100)+'%;opacity:0.75;"></div></div>'
-      + '<div style="font-size:10px;color:var(--text2);width:20px;text-align:right;flex-shrink:0">'+r.v+'</div>'
+    ratingBars += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">'
+      + '<div style="font-size:10px;color:var(--text3);width:54px;text-align:right;flex-shrink:0;letter-spacing:0.2px">'+r.l+'</div>'
+      + '<div style="flex:1;background:var(--bg4);border-radius:6px;height:12px;overflow:hidden">'
+      + '<div style="height:100%;border-radius:6px;background:'+r.c+';width:'+Math.round((r.v/maxRating)*100)+'%;opacity:0.9;"></div></div>'
+      + '<div style="font-size:11px;color:var(--text2);width:22px;text-align:right;flex-shrink:0;font-weight:600">'+r.v+'</div>'
       + '</div>';
   });
 
