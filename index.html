@@ -2435,29 +2435,21 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           ctx.fillRect(0,0,W,H);
           ctx.restore();
 
-          // Draw small poster in correct position on canvas
-          // Get DOM position of poster element
-          const posterEl = document.getElementById('scPoster');
-          const cardEl = document.getElementById('shareCard');
-          if(posterEl && posterEl.style.display !== 'none'){
-            const pr = posterEl.getBoundingClientRect();
-            const cr = cardEl.getBoundingClientRect();
-            const px = (pr.left - cr.left) * scale;
-            const py = (pr.top - cr.top) * scale;
-            const pw = pr.width * scale;
-            const ph = pr.height * scale;
-            ctx.save();
-            const pr2 = 10*scale;
-            ctx.beginPath();
-            ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
-            ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
-            ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
-            ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
-            ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(img,px,py,pw,ph);
-            ctx.restore();
-          }
+          // Draw small poster at fixed CSS position (padding:20px from card edge)
+          const POSTER_X = 20, POSTER_Y = 20, POSTER_W = 72, POSTER_H = 106, POSTER_R = 10;
+          const px = POSTER_X * scale, py = POSTER_Y * scale;
+          const pw = POSTER_W * scale, ph = POSTER_H * scale;
+          const pr2 = POSTER_R * scale;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
+          ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
+          ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
+          ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
+          ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, px, py, pw, ph);
+          ctx.restore();
           res();
         };
         img.onerror=()=>{
