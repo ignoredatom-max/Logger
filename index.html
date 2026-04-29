@@ -2413,12 +2413,16 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     finalCanvas.width = W; finalCanvas.height = H;
     const ctx = finalCanvas.getContext('2d');
 
-    // 1. Draw blurred bg + poster manually so canvas stays untainted in Brave/Chrome
+    // Draw blur bg using crossOrigin img, then draw poster from already-loaded DOM img
+    const domPosterImg = document.getElementById('scPoster');
+    
     if(entry?.poster){
+      // First try: load with crossOrigin for blur
+      const blurImg = new Image();
+      blurImg.crossOrigin = 'anonymous';
       await new Promise(res=>{
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload=()=>{
+        blurImg.onload = async ()=>{
+          // Draw blurred background
           ctx.save();
           const r = 24*scale;
           ctx.beginPath();
@@ -2427,19 +2431,39 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
           ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
           ctx.clip();
-          // Blurred background
           ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
-          ctx.drawImage(img,-80,-80,W+160,H+160);
+          ctx.drawImage(blurImg,-80,-80,W+160,H+160);
           ctx.filter='none';
           ctx.fillStyle='rgba(0,0,0,0.28)';
           ctx.fillRect(0,0,W,H);
           ctx.restore();
+          res();
+        };
+        blurImg.onerror=()=>{ ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res(); };
+        blurImg.src = entry.poster;
+      });
 
-          // Draw small poster at fixed CSS position (padding:20px from card edge)
-          const POSTER_X = 20, POSTER_Y = 20, POSTER_W = 72, POSTER_H = 106, POSTER_R = 10;
-          const px = POSTER_X * scale, py = POSTER_Y * scale;
-          const pw = POSTER_W * scale, ph = POSTER_H * scale;
-          const pr2 = POSTER_R * scale;
+      // Draw small poster using createImageBitmap from the DOM img (no CORS issue)
+      try{
+        const bitmap = await createImageBitmap(domPosterImg);
+        const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
+        const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
+        ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
+        ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
+        ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
+        ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(bitmap,px,py,pw,ph);
+        ctx.restore();
+        bitmap.close();
+      } catch(e){
+        // Fallback: try drawing the img element directly
+        try{
+          const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
+          const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
           ctx.save();
           ctx.beginPath();
           ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
@@ -2448,18 +2472,12 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
           ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
           ctx.clip();
-          ctx.drawImage(img, px, py, pw, ph);
+          ctx.drawImage(domPosterImg,px,py,pw,ph);
           ctx.restore();
-          res();
-        };
-        img.onerror=()=>{
-          ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res();
-        };
-        img.src = entry.poster + (entry.poster.includes('?')?'&':'?') + 'cb='+Date.now();
-      });
+        } catch(e2){ /* poster unavailable, skip */ }
+      }
     } else {
-      ctx.fillStyle='#161616';
-      ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H);
     }
 
     // 2. Hide both bg AND poster from html2canvas so it doesn't taint the canvas
