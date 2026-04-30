@@ -2464,75 +2464,43 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     finalCanvas.width = W; finalCanvas.height = H;
     const ctx = finalCanvas.getContext('2d');
 
-    // Draw blur bg using crossOrigin img, then draw poster from already-loaded DOM img
+    // Draw blur bg and poster manually, then layer html2canvas text/UI on top.
+    // Important: the poster must be drawn AFTER html2canvas, otherwise the DOM snapshot
+    // can paint an opaque placeholder box over it (result: blank poster in downloaded image).
     const domPosterImg = document.getElementById('scPoster');
+    const posterSrc = entry?.poster
+      ? (entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1')
+      : '';
     
     if(entry?.poster){
-      // Make sure the poster is actually decoded before we attempt to draw it.
-      // If it's still loading, createImageBitmap/drawImage can fail and you get a blank poster in the exported image.
-      await ensureImgDecoded(domPosterImg, 3500);
-
-      // First try: load with crossOrigin for blur
-      const blurImg = new Image();
-      blurImg.crossOrigin = 'anonymous';
+      // Load once for both blur + poster (export-only image).
+      const exportImg = new Image();
+      exportImg.crossOrigin = 'anonymous';
       await new Promise(res=>{
-        blurImg.onload = async ()=>{
-          // Draw blurred background
-          ctx.save();
-          const r = 24*scale;
-          ctx.beginPath();
-          ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
-          ctx.lineTo(W,H-r); ctx.quadraticCurveTo(W,H,W-r,H);
-          ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
-          ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
-          ctx.clip();
-          ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
-          ctx.drawImage(blurImg,-80,-80,W+160,H+160);
-          ctx.filter='none';
-          ctx.fillStyle='rgba(0,0,0,0.28)';
-          ctx.fillRect(0,0,W,H);
-          ctx.restore();
-          res();
-        };
-        blurImg.onerror=()=>{ ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res(); };
-        blurImg.src = entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1';
+        exportImg.onload = ()=>res();
+        exportImg.onerror = ()=>res();
+        exportImg.src = posterSrc;
       });
+      await ensureImgDecoded(exportImg, 2000);
 
-      // Draw small poster using createImageBitmap from the DOM img (no CORS issue)
-      try{
-        // If decode didn't finish for some reason, give it one more shot right before bitmap creation.
-        await ensureImgDecoded(domPosterImg, 1200);
-        const bitmap = await createImageBitmap(domPosterImg);
-        const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
-        const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
+      // Draw blurred background (if loaded)
+      if(exportImg.naturalWidth>0){
         ctx.save();
+        const r = 24*scale;
         ctx.beginPath();
-        ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
-        ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
-        ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
-        ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
-        ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
+        ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
+        ctx.lineTo(W,H-r); ctx.quadraticCurveTo(W,H,W-r,H);
+        ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
+        ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
         ctx.clip();
-        ctx.drawImage(bitmap,px,py,pw,ph);
+        ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
+        ctx.drawImage(exportImg,-80,-80,W+160,H+160);
+        ctx.filter='none';
+        ctx.fillStyle='rgba(0,0,0,0.28)';
+        ctx.fillRect(0,0,W,H);
         ctx.restore();
-        bitmap.close();
-      } catch(e){
-        // Fallback: try drawing the img element directly
-        try{
-          await ensureImgDecoded(domPosterImg, 1200);
-          const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
-          const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
-          ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
-          ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
-          ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
-          ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
-          ctx.clip();
-          ctx.drawImage(domPosterImg,px,py,pw,ph);
-          ctx.restore();
-        } catch(e2){ /* poster unavailable, skip */ }
+      } else {
+        ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H);
       }
     } else {
       ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H);
@@ -2550,8 +2518,34 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     bg.style.display='';
     if(posterEl) posterEl.style.visibility = '';
 
-    // 3. Composite HTML on top of blurred bg
+    // 3. Composite HTML (text/UI) on top of bg
     ctx.drawImage(htmlCanvas,0,0);
+
+    // 4. Draw the small poster LAST so it can’t get covered by the DOM snapshot
+    if(entry?.poster){
+      const exportPoster = new Image();
+      exportPoster.crossOrigin = 'anonymous';
+      await new Promise(res=>{
+        exportPoster.onload = ()=>res();
+        exportPoster.onerror = ()=>res();
+        exportPoster.src = posterSrc;
+      });
+      await ensureImgDecoded(exportPoster, 2000);
+      if(exportPoster.naturalWidth>0){
+        const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
+        const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
+        ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
+        ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
+        ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
+        ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(exportPoster,px,py,pw,ph);
+        ctx.restore();
+      }
+    }
 
     const a = document.createElement('a');
     a.href = finalCanvas.toDataURL('image/jpeg',0.95);
