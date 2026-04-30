@@ -1482,7 +1482,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       <div class="sc-content">
         <div class="sc-top-row">
           <div class="sc-poster-wrap">
-            <img class="sc-poster" id="scPoster" src="" alt="">
+            <img class="sc-poster" id="scPoster" src="" alt="" crossorigin="anonymous">
             <div class="sc-poster-ph" id="scPosterPh" style="display:none"></div>
           </div>
           <div class="sc-info">
@@ -2358,7 +2358,7 @@ function openShareCard(){
   const poster = document.getElementById('scPoster');
   const ph = document.getElementById('scPosterPh');
   if(entry.poster){
-    poster.src=entry.poster; poster.style.display='block'; ph.style.display='none';
+    poster.src=entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1'; poster.style.display='block'; ph.style.display='none';
   } else {
     poster.style.display='none'; ph.style.display='flex'; ph.textContent=icon;
   }
@@ -2440,7 +2440,7 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           res();
         };
         blurImg.onerror=()=>{ ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res(); };
-        blurImg.src = entry.poster;
+        blurImg.src = entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1';
       });
 
       // Draw small poster using createImageBitmap from the DOM img (no CORS issue)
