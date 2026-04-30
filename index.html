@@ -1482,7 +1482,7 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
       <div class="sc-content">
         <div class="sc-top-row">
           <div class="sc-poster-wrap">
-            <img class="sc-poster" id="scPoster" src="" alt="">
+            <img class="sc-poster" id="scPoster" src="" alt="" crossorigin="anonymous">
             <div class="sc-poster-ph" id="scPosterPh" style="display:none"></div>
           </div>
           <div class="sc-info">
@@ -1760,6 +1760,22 @@ function toast(msg,dur=2400){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+const IS_FILE = window.location.protocol === 'file:';
+function envHint(){
+  if(IS_FILE) return 'Open via GitHub Pages (https://…), not file://';
+  return 'Check internet';
+}
+
+async function safeCopy(text){
+  try{
+    if(window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.writeText === 'function'){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch{}
+  return false;
 }
 
 function refreshStats(){
@@ -2102,6 +2118,7 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
 
 // ── API ─────────────────────────────────────────────────
 async function apiSearch(q){
+  if(IS_FILE) throw new Error('file-mode');
   if(mType==='game'){
     const r=await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&key=${RAWG}&page_size=8`);
     const d=await r.json();
@@ -2156,7 +2173,11 @@ async function runSearch(q){
       }).join('');
     dropdown.querySelectorAll('.dr-item').forEach(el=>el.addEventListener('click',()=>pickResult(dropData[+el.dataset.i])));
     dropdown.classList.add('show');
-  }catch{spin.classList.remove('show');dropdown.innerHTML='<div class="dr-empty">Search failed — check internet</div>';dropdown.classList.add('show');}
+  }catch(e){
+    spin.classList.remove('show');
+    dropdown.innerHTML=`<div class="dr-empty">Search failed — ${envHint()}</div>`;
+    dropdown.classList.add('show');
+  }
 }
 
 function pickResult(r){
@@ -2340,6 +2361,33 @@ const RATING_BG={
   decent:'rgba(0,180,216,0.18)', excellent:'rgba(0,197,102,0.18)', peak:'rgba(191,90,242,0.18)'
 };
 
+async function ensureImgDecoded(img, timeoutMs=2500){
+  if(!img) return false;
+  if(img.complete && img.naturalWidth>0) return true;
+  const tryDecode = async()=>{
+    try{
+      if(typeof img.decode === 'function'){ await img.decode(); return img.naturalWidth>0; }
+    }catch{}
+    return false;
+  };
+  const decoded = await tryDecode();
+  if(decoded) return true;
+  return await new Promise(resolve=>{
+    let done=false;
+    const finish=(ok)=>{ if(done) return; done=true; cleanup(); resolve(!!ok); };
+    const cleanup=()=>{
+      img.removeEventListener('load', onLoad);
+      img.removeEventListener('error', onErr);
+      clearTimeout(t);
+    };
+    const onLoad=()=>finish(true);
+    const onErr=()=>finish(false);
+    const t=setTimeout(()=>finish(img.complete && img.naturalWidth>0), timeoutMs);
+    img.addEventListener('load', onLoad, { once:true });
+    img.addEventListener('error', onErr, { once:true });
+  });
+}
+
 function openShareCard(){
   const entry = DATA.find(x=>x.id===editId);
   if(!entry) return;
@@ -2358,7 +2406,10 @@ function openShareCard(){
   const poster = document.getElementById('scPoster');
   const ph = document.getElementById('scPosterPh');
   if(entry.poster){
-    poster.src=entry.poster; poster.style.display='block'; ph.style.display='none';
+    poster.crossOrigin = 'anonymous';
+    poster.src=entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1';
+    poster.style.display='block';
+    ph.style.display='none';
   } else {
     poster.style.display='none'; ph.style.display='flex'; ph.textContent=icon;
   }
@@ -2417,6 +2468,10 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     const domPosterImg = document.getElementById('scPoster');
     
     if(entry?.poster){
+      // Make sure the poster is actually decoded before we attempt to draw it.
+      // If it's still loading, createImageBitmap/drawImage can fail and you get a blank poster in the exported image.
+      await ensureImgDecoded(domPosterImg, 3500);
+
       // First try: load with crossOrigin for blur
       const blurImg = new Image();
       blurImg.crossOrigin = 'anonymous';
@@ -2440,11 +2495,13 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
           res();
         };
         blurImg.onerror=()=>{ ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res(); };
-        blurImg.src = entry.poster;
+        blurImg.src = entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1';
       });
 
       // Draw small poster using createImageBitmap from the DOM img (no CORS issue)
       try{
+        // If decode didn't finish for some reason, give it one more shot right before bitmap creation.
+        await ensureImgDecoded(domPosterImg, 1200);
         const bitmap = await createImageBitmap(domPosterImg);
         const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
         const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
@@ -2462,6 +2519,7 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
       } catch(e){
         // Fallback: try drawing the img element directly
         try{
+          await ensureImgDecoded(domPosterImg, 1200);
           const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
           const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
           ctx.save();
@@ -3363,11 +3421,9 @@ document.getElementById('profileShareBtn').addEventListener('click',()=>{
   if(!currentUser){ toast('Sign in first'); return; }
   const base = window.location.origin + window.location.pathname;
   const link = `${base}?u=${currentUser.uid}`;
-  navigator.clipboard.writeText(link).then(()=>{
-    toast('✅ Link copied! Share it on Instagram');
-  }).catch(()=>{
-    // Fallback for browsers that block clipboard
-    prompt('Copy your share link:', link);
+  safeCopy(link).then(ok=>{
+    if(ok) toast('✅ Link copied! Share it on Instagram');
+    else prompt('Copy your share link:', link);
   });
 });
 
