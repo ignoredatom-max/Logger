@@ -2419,6 +2419,7 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
     while(DATA.find(x=>x.id===candidate && x.id!==editId)) candidate++;
     entryId = candidate;
   }
+  const movedFromId = (editId && entryId !== editId) ? editId : null;
   if(!editId){while(DATA.find(x=>x.id===entryId))entryId++;}
   const entry={
     id:entryId,type:mType,title,poster:mPoster,genre:mGenre,year:mYear,
@@ -2429,7 +2430,15 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
   };
   // Update DATA first so cacheWrite in fsSave captures the new entry
   if(editId) DATA=DATA.map(x=>x.id===editId?entry:x); else DATA.unshift(entry);
+  // If we moved dates, delete the old Firestore doc so it doesn't come back on refresh.
+  if(movedFromId){
+    try{ await fsDelete(movedFromId); }catch(e){}
+  }
   await fsSave(entry);
+  if(movedFromId){
+    // Update editId to the new id for the rest of this modal session
+    editId = entryId;
+  }
   // Remove from watchlist
   const wl=getWL();
   const wi=wlLogIdx>=0?wlLogIdx:wl.findIndex(x=>x.title.toLowerCase()===title.toLowerCase());
