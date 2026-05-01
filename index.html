@@ -319,6 +319,50 @@ body::before{
 .modal-fav-btn{font-size:26px;background:none;border:none;cursor:pointer;padding:4px 6px;opacity:0.25;transition:all 0.15s}
 .modal-fav-btn.on{opacity:1;transform:scale(1.1)}
 .modal-fav-btn:active{transform:scale(0.9)}
+.modal-date-btn{
+  font-size:18px;
+  background:none;
+  border:1px solid transparent;
+  cursor:pointer;
+  padding:6px 8px;
+  margin-right:6px;
+  color:var(--text3);
+  opacity:0.9;
+  border-radius:10px;
+  transition:transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+}
+.modal-date-btn.on{
+  color:var(--text2);
+  background:rgba(255,255,255,0.05);
+  border-color:rgba(255,255,255,0.10);
+}
+.modal-date-btn:active{transform:scale(0.95)}
+.date-row{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:-10px 0 16px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:rgba(255,255,255,0.04);
+}
+.date-row.show{display:flex}
+.date-hint{font-size:11px;color:var(--text3)}
+.date-input{
+  width:156px;
+  max-width:45vw;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  color:var(--text2);
+  padding:9px 10px;
+  border-radius:12px;
+  font-family:'Inter',sans-serif;
+  font-size:12px;
+  outline:none;
+}
+.date-input:focus{border-color:var(--border2)}
 .lbl{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;display:block;letter-spacing:0.4px;text-transform:uppercase}
 .field{margin-bottom:16px}
 
@@ -1370,7 +1414,15 @@ body:not(.readonly) .profile-name:after{content:' ✏️';font-size:12px;opacity
     <div class="modal-inner">
       <div class="modal-title-row">
         <div class="modal-title" id="modalTitle">New Entry</div>
+        <button class="modal-date-btn" id="dateBtn" title="Change log date" aria-label="Change log date">📅</button>
         <button class="modal-fav-btn" id="favBtn">❤️</button>
+      </div>
+      <div class="date-row" id="dateRow">
+        <div>
+          <div class="date-hint">Log date (rare)</div>
+          <div class="date-hint" id="dateRowSub">Defaults to today</div>
+        </div>
+        <input class="date-input" id="dateInp" type="date">
       </div>
       <span class="lbl">Type</span>
       <div class="type-row">
@@ -1730,6 +1782,7 @@ function todayVal(){ return new Date().toISOString().slice(0,10); }
 let DATA=[],filter='all',sortBy='new';
 let _initialRenderDone = false;
 let editId=null,mType='movie',mRating=2,mPoster='',mTitle='',mFav=false,mGenre='',mYear='';
+let mDateOverride=''; // yyyy-mm-dd
 let searchTmr=null,dropData=[];
 let mSeasons=0, mLastSeason=0; // series season state
 
@@ -1760,22 +1813,6 @@ function toast(msg,dur=2400){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
-}
-
-const IS_FILE = window.location.protocol === 'file:';
-function envHint(){
-  if(IS_FILE) return 'Open via GitHub Pages (https://…), not file://';
-  return 'Check internet';
-}
-
-async function safeCopy(text){
-  try{
-    if(window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.writeText === 'function'){
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  }catch{}
-  return false;
 }
 
 function refreshStats(){
@@ -2118,7 +2155,6 @@ document.getElementById('fileInput').addEventListener('change',async e=>{
 
 // ── API ─────────────────────────────────────────────────
 async function apiSearch(q){
-  if(IS_FILE) throw new Error('file-mode');
   if(mType==='game'){
     const r=await fetch(`https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&key=${RAWG}&page_size=8`);
     const d=await r.json();
@@ -2173,11 +2209,7 @@ async function runSearch(q){
       }).join('');
     dropdown.querySelectorAll('.dr-item').forEach(el=>el.addEventListener('click',()=>pickResult(dropData[+el.dataset.i])));
     dropdown.classList.add('show');
-  }catch(e){
-    spin.classList.remove('show');
-    dropdown.innerHTML=`<div class="dr-empty">Search failed — ${envHint()}</div>`;
-    dropdown.classList.add('show');
-  }
+  }catch{spin.classList.remove('show');dropdown.innerHTML='<div class="dr-empty">Search failed — check internet</div>';dropdown.classList.add('show');}
 }
 
 function pickResult(r){
@@ -2295,6 +2327,21 @@ function openModal(entry,prefill){
   mGenre=entry?(entry.genre||''):(prefill?prefill.genre||'':'');
   mYear=entry?(entry.year||''):(prefill?prefill.year||'':'');
   mFav=entry?!!entry.fav:false;
+  // Date override (rare)
+  mDateOverride = '';
+  const dateRow = document.getElementById('dateRow');
+  const dateBtn = document.getElementById('dateBtn');
+  const dateInp = document.getElementById('dateInp');
+  const dateRowSub = document.getElementById('dateRowSub');
+  if(dateRow && dateBtn && dateInp){
+    dateRow.classList.remove('show');
+    dateBtn.classList.remove('on');
+    dateInp.value = '';
+    const existing = entry?.id ? new Date(entry.id) : null;
+    if(dateRowSub){
+      dateRowSub.textContent = existing ? `Current: ${existing.toLocaleDateString('en-IN')}` : 'Defaults to today';
+    }
+  }
   document.getElementById('modalTitle').textContent=entry?'Edit Entry':'New Entry';
   document.querySelectorAll('.type-chip').forEach(c=>c.classList.toggle('on',c.dataset.t===mType));
   document.getElementById('tmdbAttr').style.display=mType==='game'?'none':'block';
@@ -2318,6 +2365,37 @@ function openModal(entry,prefill){
   // Show share button only for existing logged entries
   document.getElementById('shareBtn').style.display = entry && !prefill ? 'block' : 'none';
 }
+
+function dateToMidnightTs(yyyyMmDd){
+  // Always store as local midnight so month/day grouping matches user’s expectation.
+  // (Avoid timezone drift from Date.parse('YYYY-MM-DD') being treated as UTC in some browsers.)
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(yyyyMmDd)) return null;
+  const [y,m,d]=yyyyMmDd.split('-').map(Number);
+  const dt=new Date(y, m-1, d, 0,0,0,0);
+  return dt.getTime();
+}
+
+// Date UI wiring (tiny + hidden by default)
+document.getElementById('dateBtn')?.addEventListener('click',()=>{
+  const row=document.getElementById('dateRow');
+  const btn=document.getElementById('dateBtn');
+  const inp=document.getElementById('dateInp');
+  if(!row||!btn||!inp) return;
+  const show = !row.classList.contains('show');
+  row.classList.toggle('show', show);
+  btn.classList.toggle('on', show);
+  if(show){
+    // default to today if empty, so user can easily nudge
+    if(!inp.value) inp.value = todayVal();
+    mDateOverride = inp.value;
+    setTimeout(()=>inp.focus(), 60);
+  } else {
+    // keep value; user can reopen and adjust
+  }
+});
+document.getElementById('dateInp')?.addEventListener('input', (e)=>{
+  mDateOverride = e.target.value || '';
+});
 document.getElementById('openBtn').addEventListener('click',()=>openModal(null));
 document.getElementById('cancelBtn').addEventListener('click',()=>{wlLogIdx=-1;overlay.classList.remove('show');});
 overlay.addEventListener('click',e=>{if(e.target===overlay){wlLogIdx=-1;overlay.classList.remove('show');}});
@@ -2330,6 +2408,17 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
   const dupEntry=!editId&&DATA.find(x=>x.title.toLowerCase()===title.toLowerCase()&&x.type===mType);
   const isDup = !!dupEntry && !(mType==='series' && dupEntry.lastSeason>0 && mLastSeason>dupEntry.lastSeason);
   let entryId=editId||Date.now();
+  const forcedTs = mDateOverride ? dateToMidnightTs(mDateOverride) : null;
+  if(!editId && forcedTs){
+    entryId = forcedTs;
+  }
+  // If editing and user explicitly set a new date, move the entry id.
+  if(editId && forcedTs && forcedTs !== editId){
+    // Prevent collisions
+    let candidate = forcedTs;
+    while(DATA.find(x=>x.id===candidate && x.id!==editId)) candidate++;
+    entryId = candidate;
+  }
   if(!editId){while(DATA.find(x=>x.id===entryId))entryId++;}
   const entry={
     id:entryId,type:mType,title,poster:mPoster,genre:mGenre,year:mYear,
@@ -2464,43 +2553,75 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     finalCanvas.width = W; finalCanvas.height = H;
     const ctx = finalCanvas.getContext('2d');
 
-    // Draw blur bg and poster manually, then layer html2canvas text/UI on top.
-    // Important: the poster must be drawn AFTER html2canvas, otherwise the DOM snapshot
-    // can paint an opaque placeholder box over it (result: blank poster in downloaded image).
+    // Draw blur bg using crossOrigin img, then draw poster from already-loaded DOM img
     const domPosterImg = document.getElementById('scPoster');
-    const posterSrc = entry?.poster
-      ? (entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1')
-      : '';
     
     if(entry?.poster){
-      // Load once for both blur + poster (export-only image).
-      const exportImg = new Image();
-      exportImg.crossOrigin = 'anonymous';
-      await new Promise(res=>{
-        exportImg.onload = ()=>res();
-        exportImg.onerror = ()=>res();
-        exportImg.src = posterSrc;
-      });
-      await ensureImgDecoded(exportImg, 2000);
+      // Make sure the poster is actually decoded before we attempt to draw it.
+      // If it's still loading, createImageBitmap/drawImage can fail and you get a blank poster in the exported image.
+      await ensureImgDecoded(domPosterImg, 3500);
 
-      // Draw blurred background (if loaded)
-      if(exportImg.naturalWidth>0){
+      // First try: load with crossOrigin for blur
+      const blurImg = new Image();
+      blurImg.crossOrigin = 'anonymous';
+      await new Promise(res=>{
+        blurImg.onload = async ()=>{
+          // Draw blurred background
+          ctx.save();
+          const r = 24*scale;
+          ctx.beginPath();
+          ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
+          ctx.lineTo(W,H-r); ctx.quadraticCurveTo(W,H,W-r,H);
+          ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
+          ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
+          ctx.clip();
+          ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
+          ctx.drawImage(blurImg,-80,-80,W+160,H+160);
+          ctx.filter='none';
+          ctx.fillStyle='rgba(0,0,0,0.28)';
+          ctx.fillRect(0,0,W,H);
+          ctx.restore();
+          res();
+        };
+        blurImg.onerror=()=>{ ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H); res(); };
+        blurImg.src = entry.poster + (entry.poster.includes('?') ? '&' : '?') + 'notaint=1';
+      });
+
+      // Draw small poster using createImageBitmap from the DOM img (no CORS issue)
+      try{
+        // If decode didn't finish for some reason, give it one more shot right before bitmap creation.
+        await ensureImgDecoded(domPosterImg, 1200);
+        const bitmap = await createImageBitmap(domPosterImg);
+        const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
+        const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
         ctx.save();
-        const r = 24*scale;
         ctx.beginPath();
-        ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
-        ctx.lineTo(W,H-r); ctx.quadraticCurveTo(W,H,W-r,H);
-        ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
-        ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
+        ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
+        ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
+        ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
+        ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
+        ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
         ctx.clip();
-        ctx.filter=`blur(${28*scale}px) brightness(0.55) saturate(2)`;
-        ctx.drawImage(exportImg,-80,-80,W+160,H+160);
-        ctx.filter='none';
-        ctx.fillStyle='rgba(0,0,0,0.28)';
-        ctx.fillRect(0,0,W,H);
+        ctx.drawImage(bitmap,px,py,pw,ph);
         ctx.restore();
-      } else {
-        ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H);
+        bitmap.close();
+      } catch(e){
+        // Fallback: try drawing the img element directly
+        try{
+          await ensureImgDecoded(domPosterImg, 1200);
+          const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
+          const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
+          ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
+          ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
+          ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
+          ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(domPosterImg,px,py,pw,ph);
+          ctx.restore();
+        } catch(e2){ /* poster unavailable, skip */ }
       }
     } else {
       ctx.fillStyle='#161616'; ctx.fillRect(0,0,W,H);
@@ -2518,34 +2639,8 @@ document.getElementById('shareDlBtn').addEventListener('click', async()=>{
     bg.style.display='';
     if(posterEl) posterEl.style.visibility = '';
 
-    // 3. Composite HTML (text/UI) on top of bg
+    // 3. Composite HTML on top of blurred bg
     ctx.drawImage(htmlCanvas,0,0);
-
-    // 4. Draw the small poster LAST so it can’t get covered by the DOM snapshot
-    if(entry?.poster){
-      const exportPoster = new Image();
-      exportPoster.crossOrigin = 'anonymous';
-      await new Promise(res=>{
-        exportPoster.onload = ()=>res();
-        exportPoster.onerror = ()=>res();
-        exportPoster.src = posterSrc;
-      });
-      await ensureImgDecoded(exportPoster, 2000);
-      if(exportPoster.naturalWidth>0){
-        const POSTER_X=20, POSTER_Y=20, POSTER_W=72, POSTER_H=106, POSTER_R=10;
-        const px=POSTER_X*scale, py=POSTER_Y*scale, pw=POSTER_W*scale, ph=POSTER_H*scale, pr2=POSTER_R*scale;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(px+pr2,py); ctx.lineTo(px+pw-pr2,py);
-        ctx.quadraticCurveTo(px+pw,py,px+pw,py+pr2);
-        ctx.lineTo(px+pw,py+ph-pr2); ctx.quadraticCurveTo(px+pw,py+ph,px+pw-pr2,py+ph);
-        ctx.lineTo(px+pr2,py+ph); ctx.quadraticCurveTo(px,py+ph,px,py+ph-pr2);
-        ctx.lineTo(px,py+pr2); ctx.quadraticCurveTo(px,py,px+pr2,py); ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(exportPoster,px,py,pw,ph);
-        ctx.restore();
-      }
-    }
 
     const a = document.createElement('a');
     a.href = finalCanvas.toDataURL('image/jpeg',0.95);
@@ -3415,9 +3510,11 @@ document.getElementById('profileShareBtn').addEventListener('click',()=>{
   if(!currentUser){ toast('Sign in first'); return; }
   const base = window.location.origin + window.location.pathname;
   const link = `${base}?u=${currentUser.uid}`;
-  safeCopy(link).then(ok=>{
-    if(ok) toast('✅ Link copied! Share it on Instagram');
-    else prompt('Copy your share link:', link);
+  navigator.clipboard.writeText(link).then(()=>{
+    toast('✅ Link copied! Share it on Instagram');
+  }).catch(()=>{
+    // Fallback for browsers that block clipboard
+    prompt('Copy your share link:', link);
   });
 });
 
